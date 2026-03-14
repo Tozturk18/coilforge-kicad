@@ -11,6 +11,8 @@ import ctypes
 import platform
 from pathlib import Path
 
+from .config import CoilConfig
+
 # --- CONSTANTS --- #
 OUTPUT_BUFFER_SIZE = 2048
 
@@ -52,7 +54,7 @@ class CoilForgeConfig(ctypes.Structure):
     ]
 
 
-def _get_library_name():
+def _get_library_name() -> Path:
     '''
     Get the appopriate library name according to the current platform/OS.
 
@@ -77,7 +79,7 @@ def _get_library_name():
     raise CoilForgeBridgeError(f"Unsupported platform: {system}")
 
 
-def _get_library_path():
+def _get_library_path() -> Path:
     '''
     Get the full file path to the CoilForge native library based on the current platform.
 
@@ -91,7 +93,7 @@ def _get_library_path():
     return file_root / "bin" / _get_library_name()
 
 
-def load_library():
+def load_library() -> ctypes.CDLL:
     '''
     Load the CoilForge native library using ctypes.
     Raises CoilForgeBridgeError if the library cannot be loaded.
@@ -124,7 +126,7 @@ def load_library():
     return lib
 
 
-def to_c_config(config):
+def to_c_config(config: CoilConfig) -> CoilForgeConfig:
     '''
     Convert a CoilConfig dataclass instance into a CoilForgeConfig ctypes structure for passing to the native library.
 
@@ -152,7 +154,7 @@ def to_c_config(config):
     return c_cfg
 
 
-def run_ctypes_bridge(config):
+def run_ctypes_bridge(config: CoilConfig) -> str:
     '''
     Run the CoilForge native library function via ctypes.
 

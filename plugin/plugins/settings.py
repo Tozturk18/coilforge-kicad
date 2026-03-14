@@ -38,7 +38,7 @@ DEFAULT_CONFIG = CoilConfig(
     via_size    = 0.45
 )
 
-def get_settings_path():
+def get_settings_path() -> Path:
     """
     Returns the JSON settings file path stored next to this plugin package.
 
@@ -49,7 +49,7 @@ def get_settings_path():
     return Path(__file__).resolve().parent / "user_settings.json"
 
 
-def load_settings():
+def load_settings() -> CoilConfig:
     """
     Load saved settings from JSON.
     If the file does not exist or is invalid, return DEFAULT_CONFIG.
@@ -90,7 +90,7 @@ def load_settings():
         return DEFAULT_CONFIG
 
 
-def save_settings(config):
+def save_settings(config: CoilConfig) -> bool:
     """
     Save CoilConfig to JSON.
     Returns True on success, False on failure.

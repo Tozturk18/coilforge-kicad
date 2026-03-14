@@ -16,11 +16,12 @@ import pcbnew
 import wx
 
 # --- INTERNAL MODULES --- #
+from .config import CoilConfig
 from .controller import prompt_for_config
 from .bridge import run_ctypes_bridge
 
 
-def format_config_summary(config):
+def format_config_summary(config: CoilConfig) -> str:
     """
     Build a user-facing summary of the accepted configuration.
 
@@ -47,7 +48,7 @@ class CoilForgePlugin(pcbnew.ActionPlugin):
     A KiCad plugin that integrates the CoilForge coil generation library.
     '''
 
-    def defaults(self):
+    def defaults(self) -> None:
         '''
         Set the default properties for the plugin, such as name, category, description, and toolbar button visibility.
         '''
@@ -58,7 +59,7 @@ class CoilForgePlugin(pcbnew.ActionPlugin):
         self.icon_file_name = "icon.png"                            # The filename of the icon to use for the plugin's toolbar button
         self.dark_icon_file_name = "icon.png"                       # The filename of the icon to use for the plugin's toolbar button in dark mode
 
-    def Run(self):
+    def Run(self) -> None:
         '''
         The main entry point for the plugin when it is executed. This method prompts the user for
         coil configuration parameters, validates them, and then calls the native CoilForge library to generate the coil geometry.

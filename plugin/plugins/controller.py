@@ -8,6 +8,7 @@
 
 # --- IMPORTS --- #
 from dataclasses import dataclass
+from typing import Optional
 
 import wx
 
@@ -28,7 +29,7 @@ class DialogSubmission:
     settings_saved: bool    # Whether the settings were successfully saved to disk
 
 
-def prompt_for_config(parent=None):
+def prompt_for_config(parent: Optional[wx.Window] = None) -> Optional["DialogSubmission"]:
     """
     Open the CoilForge dialog, validate submitted values, and persist them.
 

@@ -10,7 +10,11 @@
 '''
 
 # --- IMPORTS --- #
+from typing import Any, Optional
+
 import wx
+
+from .config import CoilConfig
 
 # --- CLASSES & FUNCTIONS --- #
 
@@ -53,7 +57,7 @@ class CoilForgeDialog(wx.Dialog):
     Returns: An instance of CoilForgeDialog that can be shown modally to the user.
     '''
 
-    def __init__(self, parent=None, initial_config=None):
+    def __init__(self, parent: Optional[wx.Window] = None, initial_config: Optional[CoilConfig] = None) -> None:
         '''
         Initialize the dialog with input fields for coil configuration.
         '''
@@ -156,7 +160,7 @@ class CoilForgeDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-    def _build_defaults(self, initial_config):
+    def _build_defaults(self, initial_config: Optional[CoilConfig]) -> dict[str, Any]:
         defaults = DEFAULT_VALUES.copy()
 
         if initial_config is None:
@@ -167,12 +171,12 @@ class CoilForgeDialog(wx.Dialog):
 
         return defaults
 
-    def get_input_values(self):
+    def get_input_values(self) -> dict[str, str]:
         values = {field_name: ctrl.GetValue() for field_name, ctrl in self.fields.items()}
         values["direction"] = self.direction.GetStringSelection()
         return values
 
-    def get_raw_values(self):
+    def get_raw_values(self) -> dict[str, str]:
         """
         Compatibility alias for earlier code paths.
         """
