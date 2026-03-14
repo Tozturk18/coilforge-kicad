@@ -11,7 +11,7 @@ import ctypes
 import platform
 from pathlib import Path
 
-from .config import CoilConfig
+from ..config.config import CoilConfig
 
 # --- CONSTANTS --- #
 OUTPUT_BUFFER_SIZE = 2048
@@ -89,7 +89,7 @@ def _get_library_path() -> Path:
     '''
 
     # Get the relative path to the library
-    file_root = Path(__file__).resolve().parents[0]
+    file_root = Path(__file__).resolve().parents[1]
     return file_root / "bin" / _get_library_name()
 
 

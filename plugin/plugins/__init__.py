@@ -8,7 +8,7 @@
 '''
 
 # --- IMPORTS --- #
-from .plugin import CoilForgePlugin
+from .plugin.plugin import CoilForgePlugin
 
 # --- PLUGIN REGISTRATION --- #
 CoilForgePlugin().register()

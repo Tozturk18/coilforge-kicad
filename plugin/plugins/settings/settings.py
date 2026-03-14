@@ -19,7 +19,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 # --- LOCAL IMPORTS --- #
-from .config import CoilConfig
+from ..config.config import CoilConfig
 
 # --- CLASSES & FUNCTIONS --- #
 
@@ -46,7 +46,7 @@ def get_settings_path() -> Path:
 
     Returns: A Path object representing the relative path to the user_settings.json file.
     """
-    return Path(__file__).resolve().parent / "user_settings.json"
+    return Path(__file__).resolve().parents[1] / "user_settings.json"
 
 
 def load_settings() -> CoilConfig:

@@ -14,7 +14,7 @@ from typing import Any, Optional
 
 import wx
 
-from .config import CoilConfig
+from ..config.config import CoilConfig
 
 # --- CLASSES & FUNCTIONS --- #
 

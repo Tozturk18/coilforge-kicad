@@ -15,7 +15,7 @@
 # --- IMPORTS --- #
 from typing import Any
 
-from .config import CoilConfig
+from ..config.config import CoilConfig
 
 # --- CLASSES & FUNCTIONS --- #
 

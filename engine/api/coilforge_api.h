@@ -30,12 +30,12 @@ extern "C" {
 /*
  * CoilForge configuration structure
  * This sctructure defines the parameters for generating coil geometries.
- * All dimensions are in millimeters (mm) and angles in degrees (deg).
+ * All dimensions are in millimeters [mm] and angles in degrees [deg].
  */
 typedef struct
 {
     double hole_radius;        /* [mm]    Hole radius               */
-    double turns;              /* [#] Number of turns               */
+    double turns;              /* [#]     Number of turns           */
     double track_width;        /* [mm]    Track width               */
     double spacing;            /* [mm]    Spacing between tracks    */
     double center_x;           /* [mm]    Center X coordinate       */
@@ -54,9 +54,9 @@ typedef struct
 * Returns non-zero on success, 0 on failure.
 */
 COILFORGE_API int coilforge_process_config(
-    const CoilForgeConfig *config,  /**< [in] Pointer to the coil configuration */
+    const CoilForgeConfig *config,  /**< [in]  Pointer to the coil configuration */
     char *out_buffer,               /**< [out] Buffer to receive the output string */
-    size_t out_buffer_size          /**< [in] Size of the output buffer in bytes */
+    size_t out_buffer_size          /**< [in]  Size of the output buffer in bytes */
 );
 
 #ifdef __cplusplus

@@ -16,9 +16,9 @@ import pcbnew
 import wx
 
 # --- INTERNAL MODULES --- #
-from .config import CoilConfig
-from .controller import prompt_for_config
-from .bridge import run_ctypes_bridge
+from ..config.config import CoilConfig
+from ..controller.controller import prompt_for_config
+from ..bridge.bridge import run_ctypes_bridge
 
 
 def format_config_summary(config: CoilConfig) -> str:

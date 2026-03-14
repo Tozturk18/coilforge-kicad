@@ -12,10 +12,10 @@ from typing import Optional
 
 import wx
 
-from .config import CoilConfig
-from .dialog_ui import CoilForgeDialog
-from .settings import load_settings, save_settings
-from .validator import parse_config
+from ..config.config import CoilConfig
+from ..dialog_ui.dialog_ui import CoilForgeDialog
+from ..settings.settings import load_settings, save_settings
+from ..validator.validator import parse_config
 
 
 # --- CLASSES & FUNCTIONS --- #
