@@ -1,3 +1,12 @@
+'''
+@ filename: config.py
+@ author:   Ozgur Tuna Ozturk
+@ date:     14/03/2024
+@ license:  MIT License
+@ description: This module defines the CoilConfig dataclass and functions for
+    loading/saving user settings and parsing/validating dialog input values.
+'''
+
 from dataclasses import dataclass
 
 

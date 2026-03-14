@@ -1,6 +1,20 @@
+'''
+@ filename: dialog_ui.py
+@ author:   Ozgur Tuna Ozturk
+@ date:     14/03/2024
+@ license:  MIT License
+@ description: This module implements the CoilForgeDialog class,
+    which defines the user interface for the CoilForge plugin using wxPython.
+    This dialog implementation is designed to be straightforward and user-friendly, 
+    with clear sections for different types of parameters and appropriate default values.
+'''
+
+# --- IMPORTS --- #
 import wx
 
+# --- CLASSES & FUNCTIONS --- #
 
+# Default values for the dialog fields, used when no initial config is provided
 DEFAULT_VALUES = {
     "hole_radius": 0.0,
     "turns": 10.0,
@@ -15,6 +29,7 @@ DEFAULT_VALUES = {
     "direction": "CW",
 }
 
+# The TEXT_FIELD_SPECS tuple defines the structure of the dialog fields, including their section, key, and label.
 TEXT_FIELD_SPECS = (
     ("Geometry", "hole_radius", "Hole Radius (mm)"),
     ("Geometry", "turns", "Number of Coil Turns"),
@@ -30,13 +45,27 @@ TEXT_FIELD_SPECS = (
 
 
 class CoilForgeDialog(wx.Dialog):
+    '''
+    A dialog for configuring CoilForge parameters.
+
+    Args: parent [wx.Window] - The parent window for this dialog (can be None).
+
+    Returns: An instance of CoilForgeDialog that can be shown modally to the user.
+    '''
+
     def __init__(self, parent=None, initial_config=None):
+        '''
+        Initialize the dialog with input fields for coil configuration.
+        '''
+
+        # Call the base class constructor to create the dialog window
         super().__init__(
             parent,
             title="CoilForge KiCad",
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
 
+        # A dictionary to hold references to the input fields, keyed by their config field names
         self.fields = {}
 
         # --- Main dialog sizer ---

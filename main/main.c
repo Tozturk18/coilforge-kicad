@@ -2,21 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct {
-    double hole_radius;
-    double turns;
-    double track_width;
-    double spacing;
-    double center_x;
-    double center_y;
-    double angle;
-    int    layers;
-    char   direction[8];
-    char   net_name[128];
-    double via_size;
-} CoilConfig;
+#include "../engine/api/coilforge_api.h"
 
-static int parse_args(int argc, char *argv[], CoilConfig *cfg) {
+static int parse_args(int argc, char *argv[], CoilForgeConfig *cfg) {
     int i;
 
     if ((argc - 1) % 2 != 0) {
@@ -50,8 +38,18 @@ static int parse_args(int argc, char *argv[], CoilConfig *cfg) {
             cfg->layers = atoi(argv[++i]);
         }
         else if (strcmp(argv[i], "-d") == 0) {
-            strncpy(cfg->direction, argv[++i], sizeof(cfg->direction) - 1);
-            cfg->direction[sizeof(cfg->direction) - 1] = '\0';
+            const char *direction = argv[++i];
+
+            if (strcmp(direction, "CW") == 0) {
+                cfg->direction = 0;
+            }
+            else if (strcmp(direction, "CCW") == 0) {
+                cfg->direction = 1;
+            }
+            else {
+                fprintf(stderr, "Direction must be CW or CCW, got: %s\n", direction);
+                return 0;
+            }
         }
         else if (strcmp(argv[i], "-n") == 0) {
             strncpy(cfg->net_name, argv[++i], sizeof(cfg->net_name) - 1);
@@ -70,24 +68,20 @@ static int parse_args(int argc, char *argv[], CoilConfig *cfg) {
 }
 
 int main(int argc, char *argv[]) {
-    CoilConfig cfg = {0};
+    CoilForgeConfig cfg = {0};
+    char buffer[1024];
 
     if (!parse_args(argc, argv, &cfg)) {
         return 1;
     }
+    
+    if (!coilforge_process_config(&cfg, buffer, sizeof(buffer)))
+    {
+        fprintf(stderr, "coilforge_process_config failed\n");
+        return 1;
+    }
 
-    printf("C ENGINE RECEIVED:\n");
-    printf("Hole Radius: %.3f mm\n", cfg.hole_radius);
-    printf("Turns: %.3f\n", cfg.turns);
-    printf("Track Width: %.3f mm\n", cfg.track_width);
-    printf("Spacing: %.3f mm\n", cfg.spacing);
-    printf("Center X: %.3f mm\n", cfg.center_x);
-    printf("Center Y: %.3f mm\n", cfg.center_y);
-    printf("Angle: %.3f deg\n", cfg.angle);
-    printf("Layers: %d\n", cfg.layers);
-    printf("Direction: %s\n", cfg.direction);
-    printf("Net Name: %s\n", cfg.net_name);
-    printf("Via Size: %.3f mm\n", cfg.via_size);
+    printf("%s", buffer);
 
     return 0;
 }

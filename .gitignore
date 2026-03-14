@@ -80,3 +80,11 @@ Desktop.ini
 
 # Copilot agent files
 .github/agents/
+
+#Python files
+.venv/
+__pycache__/
+*.pyc
+
+# CMake files
+build/

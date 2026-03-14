@@ -20,9 +20,19 @@ Package bootstrap for KiCad.
 
 ### bridge.py
 
-Reserved integration point between the KiCad Python layer and the future C engine.
+ctypes bridge between the KiCad Python layer and the shared C API in `engine/api`.
 
-- The module currently contains only a placeholder comment and does not expose functions yet.
+- `OUTPUT_BUFFER_SIZE` defines the temporary output buffer size used for C API responses.
+- `CoilForgeBridgeError` reports library discovery, loading, and native-call failures with plugin-friendly messages.
+- `CoilForgeConfig` mirrors the exported C `CoilForgeConfig` struct layout exactly so Python can pass data safely through ctypes.
+- `_get_library_name()` selects the platform-specific shared library filename.
+- `_get_library_path()` resolves the installed plugin-side shared library path under `plugin/plugins/bin/<platform>`.
+- `_get_development_library_path()` resolves the repo-local development build path for the shared library.
+- `_get_candidate_library_paths()` lists the paths checked when locating the shared library.
+- `_require_library_path()` finds an existing shared library or raises a clear error if the native build has not been produced yet.
+- `load_library()` loads the shared library and configures the `coilforge_process_config` ctypes signature.
+- `to_c_config(config)` converts the validated Python `CoilConfig` into the ctypes struct used by the C API.
+- `run_ctypes_bridge(config)` calls the native `coilforge_process_config` function and returns the decoded output string.
 
 ### config.py
 
@@ -56,7 +66,7 @@ Defines the KiCad `ActionPlugin` entry point and user-facing success or error me
 - `format_config_summary(config)` formats the accepted configuration into a readable summary for the message box.
 - `CoilForgePlugin` is the KiCad action plugin class.
 - `CoilForgePlugin.defaults()` sets the plugin metadata KiCad uses in its UI.
-- `CoilForgePlugin.Run()` opens the parameter flow through `controller.py`, handles validation errors, and reports whether settings were saved.
+- `CoilForgePlugin.Run()` opens the parameter flow through `controller.py`, calls the native bridge, handles validation or native-library failures, and reports whether settings were saved.
 
 ### settings.py
 
