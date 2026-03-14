@@ -12,6 +12,8 @@
 '''
 
 # --- IMPORTS --- #
+from pathlib import Path
+
 import pcbnew
 import wx
 
@@ -19,6 +21,25 @@ import wx
 from ..config.config import CoilConfig
 from ..controller.controller import prompt_for_config
 from ..bridge.bridge import run_ctypes_bridge
+
+
+def _resolve_icon_path() -> str:
+    """Resolve plugin icon path for both dev and installed KiCad layouts."""
+    module_path = Path(__file__).resolve()
+    package_root = module_path.parents[1]
+
+    candidates = [
+        module_path.parent / "icon.png",
+        package_root.parent / "resources" / "icon.png",
+        package_root.parent.parent / "resources" / package_root.name / "icon.png",
+    ]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+
+    # Fallback keeps behavior deterministic even if icon is missing.
+    return "icon.png"
 
 
 def format_config_summary(config: CoilConfig) -> str:
@@ -56,8 +77,9 @@ class CoilForgePlugin(pcbnew.ActionPlugin):
         self.category = "Coil / Motor Tools"                        # The category under which the plugin will be listed in the Action Plugins menu
         self.description = "Open the CoilForge parameter dialog"    # A brief description of what the plugin does, shown in the Action Plugins menu
         self.show_toolbar_button = True                             # Whether to show a toolbar button for this plugin (True/False) 
-        self.icon_file_name = "icon.png"                            # The filename of the icon to use for the plugin's toolbar button
-        self.dark_icon_file_name = "icon.png"                       # The filename of the icon to use for the plugin's toolbar button in dark mode
+        icon_path = _resolve_icon_path()
+        self.icon_file_name = icon_path                              # The icon path used for the plugin toolbar button
+        self.dark_icon_file_name = icon_path                         # The icon path used for the plugin toolbar button in dark mode
 
     def Run(self) -> None:
         '''
