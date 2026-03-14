@@ -43,7 +43,7 @@ class CoilForgeConfig(ctypes.Structure):
         ("hole_radius", ctypes.c_double),       # [mm]    Radius of the hole in the center of the coil
         ("turns",       ctypes.c_double),       # [#]     Number of coil turns
         ("track_width", ctypes.c_double),       # [mm]    Track width
-        ("spacing",     ctypes.c_double),       # [mm]    Spacing between coil turns
+        ("pitch",       ctypes.c_double),       # [mm]    Pitch between coil turns
         ("center_x",    ctypes.c_double),       # [mm]    Center X coordinate
         ("center_y",    ctypes.c_double),       # [mm]    Center Y coordinate
         ("angle",       ctypes.c_double),       # [deg]   Rotation angle in degrees
@@ -139,7 +139,7 @@ def to_c_config(config: CoilConfig) -> CoilForgeConfig:
     c_cfg.hole_radius   = config.hole_radius                    # Set hole radius
     c_cfg.turns         = config.turns                          # Set number of turns
     c_cfg.track_width   = config.track_width                    # Set track width
-    c_cfg.spacing       = config.spacing                        # Set spacing between coil turns
+    c_cfg.pitch         = config.pitch                          # Set pitch between coil turns
     c_cfg.center_x      = config.center_x                       # Set center X coordinate
     c_cfg.center_y      = config.center_y                       # Set center Y coordinate
     c_cfg.angle         = config.angle                          # Set rotation angle

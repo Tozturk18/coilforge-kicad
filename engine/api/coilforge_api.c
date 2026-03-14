@@ -46,7 +46,7 @@ int coilforge_process_config( const CoilForgeConfig *config, char *out_buffer, s
         "Hole Radius: %.3f mm\n"
         "Turns: %.3f\n"
         "Track Width: %.3f mm\n"
-        "Spacing: %.3f mm\n"
+        "Pitch: %.3f mm\n"
         "Center: (%.3f, %.3f) mm\n"
         "Angle: %.3f deg\n"
         "Layers: %d\n"
@@ -56,7 +56,7 @@ int coilforge_process_config( const CoilForgeConfig *config, char *out_buffer, s
         config->hole_radius,
         config->turns,
         config->track_width,
-        config->spacing,
+        config->pitch,
         config->center_x,
         config->center_y,
         config->angle,

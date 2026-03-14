@@ -27,4 +27,4 @@ Main package documentation for `plugin/plugins`.
 2. `plugin/plugin.py` starts the flow on `Run()`.
 3. `controller/controller.py` loads defaults, opens dialog, validates, and saves.
 4. `bridge/bridge.py` calls the C API via ctypes.
-5. `settings/settings.py` persists accepted values to `user_settings.json`.
+5. `settings/settings.py` persists accepted values to the active KiCad `.kicad_pro` file.

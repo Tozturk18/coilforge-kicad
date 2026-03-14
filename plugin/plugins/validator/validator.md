@@ -12,5 +12,5 @@ Input parsing and engineering constraints validation.
 - `get_required_value(...)`: fetches required fields with user-friendly errors.
 - `parse_float(...)`: typed conversion with readable error handling.
 - `parse_int(...)`: typed conversion with readable error handling.
-- `parse_config(...)`: converts raw dialog values to `CoilConfig`.
-- `validate_config(...)`: enforces constraints (dimensions, turns, layers, direction, net name).
+- `parse_config(...)`: converts raw dialog values to `CoilConfig`, using `pitch` as the public geometry parameter.
+- `validate_config(...)`: enforces constraints including `pitch >= track_width` to prevent overlapping traces.

@@ -8,4 +8,4 @@ Shared typed configuration model.
 
 ## Important Symbols
 
-- `CoilConfig`: canonical configuration object for coil generation parameters.
+- `CoilConfig`: canonical configuration object for coil generation parameters, using `pitch` as the public turn-to-turn distance.

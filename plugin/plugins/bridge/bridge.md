@@ -5,6 +5,7 @@ ctypes bridge between Python plugin code and the native CoilForge library.
 ## Purpose
 
 `bridge.py` finds and loads the platform-specific shared library, converts Python config to C struct format, and invokes the C API.
+The bridge now passes `pitch` through the public ABI rather than `spacing`.
 
 ## Important Symbols
 

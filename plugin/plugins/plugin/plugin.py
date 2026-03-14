@@ -54,7 +54,7 @@ def format_config_summary(config: CoilConfig) -> str:
         f"Hole Radius: {config.hole_radius} mm\n"
         f"Turns: {config.turns}\n"
         f"Track Width: {config.track_width} mm\n"
-        f"Spacing: {config.spacing} mm\n"
+        f"Pitch: {config.pitch} mm\n"
         f"Center: ({config.center_x}, {config.center_y}) mm\n"
         f"Angle: {config.angle} deg\n"
         f"Layers: {config.layers}\n"

@@ -15,7 +15,7 @@ class CoilConfig:
     hole_radius: float
     turns: float
     track_width: float
-    spacing: float
+    pitch: float
     center_x: float
     center_y: float
     angle: float

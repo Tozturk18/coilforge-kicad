@@ -29,7 +29,7 @@ DEFAULT_CONFIG = CoilConfig(
     hole_radius = 0.0,
     turns       = 10.0,
     track_width = 0.25,
-    spacing     = 0.20,
+    pitch       = 0.45,
     center_x    = 0.0,
     center_y    = 0.0,
     angle       = 0.0,
@@ -39,7 +39,7 @@ DEFAULT_CONFIG = CoilConfig(
     via_size    = 0.45
 )
 
-COILFORGE_SCHEMA_VERSION = 1
+COILFORGE_SCHEMA_VERSION = 2
 
 
 # --- INTERNAL HELPERS --- #
@@ -50,17 +50,17 @@ def _config_to_dict(config: CoilConfig) -> dict:
     """
     return {
         "version":         COILFORGE_SCHEMA_VERSION,
-        "hole_radius_mm":  config.hole_radius,
+        "hole_radius":  config.hole_radius,
         "turns":           config.turns,
-        "track_width_mm":  config.track_width,
-        "spacing_mm":      config.spacing,
-        "center_x_mm":     config.center_x,
-        "center_y_mm":     config.center_y,
-        "angle_deg":       config.angle,
+        "track_width":  config.track_width,
+        "pitch":        config.pitch,
+        "center_x":     config.center_x,
+        "center_y":     config.center_y,
+        "angle":       config.angle,
         "layers":          config.layers,
         "direction":       config.direction,
         "net_name":        config.net_name,
-        "via_size_mm":     config.via_size
+        "via_size":     config.via_size
     }
 
 
@@ -69,18 +69,27 @@ def _dict_to_config(data: dict) -> CoilConfig:
     Convert a CoilForge JSON dictionary into a CoilConfig object.
     Missing or invalid values fall back to DEFAULT_CONFIG field-by-field.
     """
+    track_width = float(data.get("track_width", DEFAULT_CONFIG.track_width))
+    pitch_value = data.get("pitch", DEFAULT_CONFIG.pitch)
+
+    if pitch_value is None:
+        spacing_value = float(data.get("spacing", DEFAULT_CONFIG.pitch - track_width))
+        pitch = spacing_value + track_width
+    else:
+        pitch = float(pitch_value)
+
     return CoilConfig(
-        hole_radius = float(data.get("hole_radius_mm", DEFAULT_CONFIG.hole_radius)),
+        hole_radius = float(data.get("hole_radius", DEFAULT_CONFIG.hole_radius)),
         turns       = float(data.get("turns",          DEFAULT_CONFIG.turns)),
-        track_width = float(data.get("track_width_mm", DEFAULT_CONFIG.track_width)),
-        spacing     = float(data.get("spacing_mm",     DEFAULT_CONFIG.spacing)),
-        center_x    = float(data.get("center_x_mm",    DEFAULT_CONFIG.center_x)),
-        center_y    = float(data.get("center_y_mm",    DEFAULT_CONFIG.center_y)),
-        angle       = float(data.get("angle_deg",      DEFAULT_CONFIG.angle)),
+        track_width = track_width,
+        pitch       = pitch,
+        center_x    = float(data.get("center_x",    DEFAULT_CONFIG.center_x)),
+        center_y    = float(data.get("center_y",    DEFAULT_CONFIG.center_y)),
+        angle       = float(data.get("angle",      DEFAULT_CONFIG.angle)),
         layers      = int  (data.get("layers",         DEFAULT_CONFIG.layers)),
         direction   = str  (data.get("direction",      DEFAULT_CONFIG.direction)),
         net_name    = str  (data.get("net_name",       DEFAULT_CONFIG.net_name)),
-        via_size    = float(data.get("via_size_mm",    DEFAULT_CONFIG.via_size))
+        via_size    = float(data.get("via_size",    DEFAULT_CONFIG.via_size))
     )
 
 

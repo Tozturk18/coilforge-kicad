@@ -24,7 +24,7 @@ FIELD_LABELS = {
     "hole_radius" : "Hole Radius (mm)",
     "turns"       : "Number of Coil Turns",
     "track_width" : "Track Width (mm)",
-    "spacing"     : "Spacing (mm)",
+    "pitch"       : "Pitch (mm)",
     "center_x"    : "Center X Position (mm)",
     "center_y"    : "Center Y Position (mm)",
     "angle"       : "Angle (deg)",
@@ -96,7 +96,7 @@ def parse_config(raw_values: dict[str, Any]) -> CoilConfig:
         hole_radius = parse_float(get_required_value(raw_values, "hole_radius"), "hole_radius"),
         turns       = parse_float(get_required_value(raw_values, "turns"),       "turns"),
         track_width = parse_float(get_required_value(raw_values, "track_width"), "track_width"),
-        spacing     = parse_float(get_required_value(raw_values, "spacing"),     "spacing"),
+        pitch       = parse_float(get_required_value(raw_values, "pitch"),       "pitch"),
         center_x    = parse_float(get_required_value(raw_values, "center_x"),    "center_x"),
         center_y    = parse_float(get_required_value(raw_values, "center_y"),    "center_y"),
         angle       = parse_float(get_required_value(raw_values, "angle"),       "angle"),
@@ -129,8 +129,11 @@ def validate_config(config: CoilConfig) -> None:
     if config.track_width <= 0:
         raise ValueError("Track Width (mm) must be greater than 0.")
 
-    if config.spacing < 0:
-        raise ValueError("Spacing (mm) must be 0 or greater.")
+    if config.pitch <= 0:
+        raise ValueError("Pitch (mm) must be greater than 0.")
+
+    if config.pitch < config.track_width:
+        raise ValueError("Pitch (mm) must be greater than or equal to Track Width (mm).")
 
     if config.layers < 1:
         raise ValueError("Layers must be at least 1.")

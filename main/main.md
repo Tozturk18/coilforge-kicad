@@ -16,3 +16,6 @@ Ties together all engine modules to:
 ```bash
 ./kicad-bldc-coil-generator --config config.json --output out.kicad_mod
 ```
+
+The current CLI-facing configuration uses `pitch` as the public turn-to-turn distance.
+Legacy spacing input can still be translated internally for compatibility.

@@ -6,6 +6,13 @@
 
 static int parse_args(int argc, char *argv[], CoilForgeConfig *cfg) {
     int i;
+    double legacy_spacing;
+    int saw_legacy_spacing;
+    int saw_pitch;
+
+    legacy_spacing = 0.0;
+    saw_legacy_spacing = 0;
+    saw_pitch = 0;
 
     if ((argc - 1) % 2 != 0) {
         fprintf(stderr, "Invalid number of arguments. Arguments should be in pairs.\n");
@@ -22,8 +29,13 @@ static int parse_args(int argc, char *argv[], CoilForgeConfig *cfg) {
         else if (strcmp(argv[i], "-w") == 0) {
             cfg->track_width = atof(argv[++i]);
         }
+        else if (strcmp(argv[i], "-p") == 0) {
+            cfg->pitch = atof(argv[++i]);
+            saw_pitch = 1;
+        }
         else if (strcmp(argv[i], "-s") == 0) {
-            cfg->spacing = atof(argv[++i]);
+            legacy_spacing = atof(argv[++i]);
+            saw_legacy_spacing = 1;
         }
         else if (strcmp(argv[i], "-x") == 0) {
             cfg->center_x = atof(argv[++i]);
@@ -62,6 +74,10 @@ static int parse_args(int argc, char *argv[], CoilForgeConfig *cfg) {
             fprintf(stderr, "Unknown or incomplete argument: %s\n", argv[i]);
             return 0;
         }
+    }
+
+    if (saw_legacy_spacing && !saw_pitch) {
+        cfg->pitch = legacy_spacing + cfg->track_width;
     }
 
     return 1;

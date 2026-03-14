@@ -23,6 +23,7 @@
 #endif
 
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,7 +38,7 @@ typedef struct
     double hole_radius;        /* [mm]    Hole radius               */
     double turns;              /* [#]     Number of turns           */
     double track_width;        /* [mm]    Track width               */
-    double spacing;            /* [mm]    Spacing between tracks    */
+    double pitch;              /* [mm]    Pitch between tracks      */
     double center_x;           /* [mm]    Center X coordinate       */
     double center_y;           /* [mm]    Center Y coordinate       */
     double angle;              /* [deg]   Angle in degrees          */
