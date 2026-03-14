@@ -1,3 +1,12 @@
+/* COILFORGE API HEADER
+ * filename: coilforge_api.h
+ * author:   Ozgur Tuna Ozturk [@Tozturk18]
+ * date:     14/03/2024
+ * license:  MIT License
+ * description: This header file defines the CoilForge API, including the configuration
+ *  structure and the function
+ */
+
 #ifndef COILFORGE_API_H
 #define COILFORGE_API_H
 
