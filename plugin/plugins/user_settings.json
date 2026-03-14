@@ -1,13 +1,13 @@
 {
-    "hole_radius_mm": 0.0,
+    "hole_radius": 0.0,
     "turns": 10.0,
-    "track_width_mm": 0.25,
-    "spacing_mm": 0.2,
-    "center_x_mm": 0.0,
-    "center_y_mm": 0.0,
-    "angle_deg": 0.0,
+    "track_width": 0.25,
+    "spacing": 0.2,
+    "center_x": 0.0,
+    "center_y": 0.0,
+    "angle": 0.0,
     "layers": 2,
     "direction": "CW",
-    "net_name": "COIL_NET",
-    "via_size_mm": 0.45
+    "net_name": "Banana",
+    "via_size": 0.45
 }

@@ -6,17 +6,17 @@ from .config import CoilConfig
 
 
 DEFAULT_CONFIG = CoilConfig(
-    hole_radius_mm=0.0,
+    hole_radius=0.0,
     turns=10.0,
-    track_width_mm=0.25,
-    spacing_mm=0.20,
-    center_x_mm=0.0,
-    center_y_mm=0.0,
-    angle_deg=0.0,
+    track_width=0.25,
+    spacing=0.20,
+    center_x=0.0,
+    center_y=0.0,
+    angle=0.0,
     layers=2,
     direction="CW",
     net_name="COIL_NET",
-    via_size_mm=0.45
+    via_size=0.45
 )
 
 
@@ -42,17 +42,17 @@ def load_settings():
             data = json.load(f)
 
         return CoilConfig(
-            hole_radius_mm=float(data.get("hole_radius_mm", DEFAULT_CONFIG.hole_radius_mm)),
+            hole_radius=float(data.get("hole_radius", DEFAULT_CONFIG.hole_radius)),
             turns=float(data.get("turns", DEFAULT_CONFIG.turns)),
-            track_width_mm=float(data.get("track_width_mm", DEFAULT_CONFIG.track_width_mm)),
-            spacing_mm=float(data.get("spacing_mm", DEFAULT_CONFIG.spacing_mm)),
-            center_x_mm=float(data.get("center_x_mm", DEFAULT_CONFIG.center_x_mm)),
-            center_y_mm=float(data.get("center_y_mm", DEFAULT_CONFIG.center_y_mm)),
-            angle_deg=float(data.get("angle_deg", DEFAULT_CONFIG.angle_deg)),
+            track_width=float(data.get("track_width", DEFAULT_CONFIG.track_width)),
+            spacing=float(data.get("spacing", DEFAULT_CONFIG.spacing)),
+            center_x=float(data.get("center_x", DEFAULT_CONFIG.center_x)),
+            center_y=float(data.get("center_y", DEFAULT_CONFIG.center_y)),
+            angle=float(data.get("angle", DEFAULT_CONFIG.angle)),
             layers=int(data.get("layers", DEFAULT_CONFIG.layers)),
             direction=str(data.get("direction", DEFAULT_CONFIG.direction)),
             net_name=str(data.get("net_name", DEFAULT_CONFIG.net_name)),
-            via_size_mm=float(data.get("via_size_mm", DEFAULT_CONFIG.via_size_mm))
+            via_size=float(data.get("via_size", DEFAULT_CONFIG.via_size))
         )
 
     except (OSError, ValueError, TypeError, json.JSONDecodeError):

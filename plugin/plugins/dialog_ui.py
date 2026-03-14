@@ -2,29 +2,29 @@ import wx
 
 
 DEFAULT_VALUES = {
-    "hole_radius_mm": 0.0,
+    "hole_radius": 0.0,
     "turns": 10.0,
-    "track_width_mm": 0.25,
-    "spacing_mm": 0.20,
-    "center_x_mm": 0.0,
-    "center_y_mm": 0.0,
-    "angle_deg": 0.0,
+    "track_width": 0.25,
+    "spacing": 0.20,
+    "center_x": 0.0,
+    "center_y": 0.0,
+    "angle": 0.0,
     "layers": 2,
     "net_name": "COIL_NET",
-    "via_size_mm": 0.45,
+    "via_size": 0.45,
     "direction": "CW",
 }
 
 TEXT_FIELD_SPECS = (
-    ("Geometry", "hole_radius_mm", "Hole Radius (mm)"),
+    ("Geometry", "hole_radius", "Hole Radius (mm)"),
     ("Geometry", "turns", "Number of Coil Turns"),
-    ("Geometry", "track_width_mm", "Track Width (mm)"),
-    ("Geometry", "spacing_mm", "Spacing (mm)"),
-    ("Placement", "center_x_mm", "Center X Position (mm)"),
-    ("Placement", "center_y_mm", "Center Y Position (mm)"),
-    ("Placement", "angle_deg", "Angle (deg)"),
+    ("Geometry", "track_width", "Track Width (mm)"),
+    ("Geometry", "spacing", "Spacing (mm)"),
+    ("Placement", "center_x", "Center X Position (mm)"),
+    ("Placement", "center_y", "Center Y Position (mm)"),
+    ("Placement", "angle", "Angle (deg)"),
     ("Routing", "layers", "Layers"),
-    ("Routing", "via_size_mm", "Via Size (mm)"),
+    ("Routing", "via_size", "Via Size (mm)"),
     ("Connectivity", "net_name", "Net Name"),
 )
 
@@ -70,25 +70,25 @@ class CoilForgeDialog(wx.Dialog):
 
         # ---------- Geometry Section ----------
         geometry_sizer, geometry_grid = make_section("Geometry")
-        add_text_field(geometry_grid, "hole_radius_mm", "Hole Radius (mm)", defaults["hole_radius_mm"])
+        add_text_field(geometry_grid, "hole_radius", "Hole Radius (mm)", defaults["hole_radius"])
         add_text_field(geometry_grid, "turns", "Number of Coil Turns", defaults["turns"])
-        add_text_field(geometry_grid, "track_width_mm", "Track Width (mm)", defaults["track_width_mm"])
-        add_text_field(geometry_grid, "spacing_mm", "Spacing (mm)", defaults["spacing_mm"])
+        add_text_field(geometry_grid, "track_width", "Track Width (mm)", defaults["track_width"])
+        add_text_field(geometry_grid, "spacing", "Spacing (mm)", defaults["spacing"])
 
         panel_sizer.Add(geometry_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # ---------- Placement Section ----------
         placement_sizer, placement_grid = make_section("Placement")
-        add_text_field(placement_grid, "center_x_mm", "Center X Position (mm)", defaults["center_x_mm"])
-        add_text_field(placement_grid, "center_y_mm", "Center Y Position (mm)", defaults["center_y_mm"])
-        add_text_field(placement_grid, "angle_deg", "Angle (deg)", defaults["angle_deg"])
+        add_text_field(placement_grid, "center_x", "Center X Position (mm)", defaults["center_x"])
+        add_text_field(placement_grid, "center_y", "Center Y Position (mm)", defaults["center_y"])
+        add_text_field(placement_grid, "angle", "Angle (deg)", defaults["angle"])
 
         panel_sizer.Add(placement_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # ---------- Routing Section ----------
         routing_sizer, routing_grid = make_section("Routing")
         add_text_field(routing_grid, "layers", "Layers", defaults["layers"])
-        add_text_field(routing_grid, "via_size_mm", "Via Size (mm)", defaults["via_size_mm"])
+        add_text_field(routing_grid, "via_size", "Via Size (mm)", defaults["via_size"])
 
         direction_label = wx.StaticText(panel, label="Direction")
         self.direction = wx.RadioBox(
