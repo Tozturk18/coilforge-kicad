@@ -77,3 +77,6 @@ Desktop.ini
 *.gz
 *.bz2
 *.xz
+
+# Copilot agent files
+.github/agents/

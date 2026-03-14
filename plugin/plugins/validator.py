@@ -1,6 +1,32 @@
 from .config import CoilConfig
 
 
+FIELD_LABELS = {
+    "hole_radius_mm": "Hole Radius (mm)",
+    "turns": "Number of Coil Turns",
+    "track_width_mm": "Track Width (mm)",
+    "spacing_mm": "Spacing (mm)",
+    "center_x_mm": "Center X Position (mm)",
+    "center_y_mm": "Center Y Position (mm)",
+    "angle_deg": "Angle (deg)",
+    "layers": "Layers",
+    "direction": "Direction",
+    "net_name": "Net Name",
+    "via_size_mm": "Via Size (mm)",
+}
+
+
+def get_required_value(raw_values, field_name):
+    """
+    Retrieve a required raw value by stable field name.
+    Raises ValueError when the field is missing from the submission.
+    """
+    try:
+        return raw_values[field_name]
+    except KeyError as exc:
+        raise ValueError(f"{FIELD_LABELS[field_name]} is missing.") from exc
+
+
 def parse_float(value, field_name):
     """
     Convert a string-like value to float.
@@ -25,21 +51,21 @@ def parse_int(value, field_name):
 
 def parse_config(raw_values):
     """
-    Convert raw dialog string values into a typed CoilConfig.
-    Expects a dictionary with UI field labels as keys.
+    Convert raw dialog values into a typed CoilConfig.
+    Expects a dictionary keyed by stable config field names.
     """
     config = CoilConfig(
-        hole_radius_mm=parse_float(raw_values["Hole Radius (mm)"], "Hole Radius (mm)"),
-        turns=parse_float(raw_values["Number of Coil Turns"], "Number of Coil Turns"),
-        track_width_mm=parse_float(raw_values["Track Width (mm)"], "Track Width (mm)"),
-        spacing_mm=parse_float(raw_values["Spacing (mm)"], "Spacing (mm)"),
-        center_x_mm=parse_float(raw_values["Center X Position (mm)"], "Center X Position (mm)"),
-        center_y_mm=parse_float(raw_values["Center Y Position (mm)"], "Center Y Position (mm)"),
-        angle_deg=parse_float(raw_values["Angle (deg)"], "Angle (deg)"),
-        layers=parse_int(raw_values["Layers"], "Layers"),
-        direction=raw_values["Direction"],
-        net_name=str(raw_values["Net Name"]).strip(),
-        via_size_mm=parse_float(raw_values["Via Size (mm)"], "Via Size (mm)")
+        hole_radius_mm=parse_float(get_required_value(raw_values, "hole_radius_mm"), FIELD_LABELS["hole_radius_mm"]),
+        turns=parse_float(get_required_value(raw_values, "turns"), FIELD_LABELS["turns"]),
+        track_width_mm=parse_float(get_required_value(raw_values, "track_width_mm"), FIELD_LABELS["track_width_mm"]),
+        spacing_mm=parse_float(get_required_value(raw_values, "spacing_mm"), FIELD_LABELS["spacing_mm"]),
+        center_x_mm=parse_float(get_required_value(raw_values, "center_x_mm"), FIELD_LABELS["center_x_mm"]),
+        center_y_mm=parse_float(get_required_value(raw_values, "center_y_mm"), FIELD_LABELS["center_y_mm"]),
+        angle_deg=parse_float(get_required_value(raw_values, "angle_deg"), FIELD_LABELS["angle_deg"]),
+        layers=parse_int(get_required_value(raw_values, "layers"), FIELD_LABELS["layers"]),
+        direction=str(get_required_value(raw_values, "direction")).strip(),
+        net_name=str(get_required_value(raw_values, "net_name")).strip(),
+        via_size_mm=parse_float(get_required_value(raw_values, "via_size_mm"), FIELD_LABELS["via_size_mm"])
     )
 
     validate_config(config)
