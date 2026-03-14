@@ -59,3 +59,21 @@ dkms.conf
 
 # MacOS specific files
 .DS_Store
+__MACOSX/
+
+# Windows specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux specific files
+*~
+
+# Compressed files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.gz
+*.bz2
+*.xz
