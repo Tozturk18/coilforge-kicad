@@ -1,10 +1,11 @@
 /* COILFORGE API HEADER
  * filename: coilforge_api.h
  * author:   Ozgur Tuna Ozturk [@Tozturk18]
- * date:     14/03/2024
+ * date:     14/03/2026
  * license:  MIT License
- * description: This header file defines the CoilForge API, including the configuration
- *  structure and the function
+ * description: This header file defines the CoilForge API, including the
+ *  configuration structure and the public functions used by the Python ctypes
+ *  bridge.
  */
 
 #ifndef COILFORGE_API_H
@@ -22,15 +23,13 @@
     #define COILFORGE_API
 #endif
 
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*
  * CoilForge configuration structure
- * This sctructure defines the parameters for generating coil geometries.
+ * This structure defines the parameters for generating coil geometries.
  * All dimensions are in millimeters [mm] and angles in degrees [deg].
  */
 typedef struct
@@ -39,29 +38,62 @@ typedef struct
     double turns;              /* [#]     Number of turns           */
     double track_width;        /* [mm]    Track width               */
     double pitch;              /* [mm]    Pitch between tracks      */
+    int    arc_resolution;     /* [#]     Arcs per turn             */
     double center_x;           /* [mm]    Center X coordinate       */
     double center_y;           /* [mm]    Center Y coordinate       */
     double angle;              /* [deg]   Angle in degrees          */
     int    layers;             /* [int]   Number of layers          */
-    int    direction;          /* [0/1]   0 = CW, 1 = CCW           */
+    int    direction;          /* [-1/1]  -1 = CW, 1 = CCW          */
     double via_size;           /* [mm]    Via Size                  */
     char   net_name[128];      /* [char*] Null-terminated string    */
 } CoilForgeConfig;
 
+/*
+ * Public 2D point used for returning coil nodes to Python.
+ */
+typedef struct
+{
+    double x;
+    double y;
+} CoilForgeVec2;
 
-/* coilforge_process_config()
-* Process the coil configuration and generate output.
-* The output is written to the provided buffer, which should be large enough to hold the result.
-* Returns non-zero on success, 0 on failure.
-*/
+/*
+ * Process the coil configuration and generate a formatted output string.
+ * Returns non-zero on success, 0 on failure.
+ */
 COILFORGE_API int coilforge_process_config(
-    const CoilForgeConfig *config,  /**< [in]  Pointer to the coil configuration */
-    char *out_buffer,               /**< [out] Buffer to receive the output string */
-    size_t out_buffer_size          /**< [in]  Size of the output buffer in bytes */
+    const CoilForgeConfig *config,
+    char *out_buffer,
+    size_t out_buffer_size
+);
+
+/*
+ * Compute the number of distinct spiral nodes required for the current config.
+ * Returns non-zero on success, 0 on failure.
+ */
+COILFORGE_API int coilforge_get_node_count(
+    const CoilForgeConfig *config,
+    int *out_node_count
+);
+
+/*
+ * Generate the node list for a single-layer coil centerline.
+ *
+ * The caller allocates the output array.
+ * max_nodes must be at least the required node count returned by
+ * coilforge_get_node_count().
+ *
+ * Returns non-zero on success, 0 on failure.
+ */
+COILFORGE_API int coilforge_generate_nodes(
+    const CoilForgeConfig *config,
+    CoilForgeVec2 *out_nodes,
+    int max_nodes,
+    int *out_node_count
 );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* COILFORGE_API_H */

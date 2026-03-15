@@ -16,6 +16,7 @@ class CoilConfig:
     turns: float
     track_width: float
     pitch: float
+    arc_resolution: int
     center_x: float
     center_y: float
     angle: float

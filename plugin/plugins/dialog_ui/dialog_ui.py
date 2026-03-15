@@ -24,6 +24,7 @@ DEFAULT_VALUES = {
     "turns": 10.0,
     "track_width": 0.25,
     "pitch": 0.45,
+    "arc_resolution": 8,
     "center_x": 0.0,
     "center_y": 0.0,
     "angle": 0.0,
@@ -39,6 +40,7 @@ TEXT_FIELD_SPECS = (
     ("Geometry", "turns", "Number of Coil Turns"),
     ("Geometry", "track_width", "Track Width (mm)"),
     ("Geometry", "pitch", "Pitch (mm)"),
+    ("Routing", "arc_resolution", "Arc Resolution"),
     ("Placement", "center_x", "Center X Position (mm)"),
     ("Placement", "center_y", "Center Y Position (mm)"),
     ("Placement", "angle", "Angle (deg)"),
@@ -163,6 +165,7 @@ class CoilForgeDialog(wx.Dialog):
         # ---------- Routing Section ----------
         routing_sizer, routing_grid = make_section("Routing")
         add_text_field(routing_grid, "layers", "Layers", defaults["layers"])
+        add_text_field(routing_grid, "arc_resolution", "Arc Resolution", defaults["arc_resolution"])
         add_text_field(routing_grid, "via_size", "Via Size (mm)", defaults["via_size"])
 
         direction_label = wx.StaticText(panel, label="Direction")

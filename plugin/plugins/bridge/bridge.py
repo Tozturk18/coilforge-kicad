@@ -1,9 +1,10 @@
 '''
 @ filename: bridge.py
 @ author:   Ozgur Tuna Ozturk
-@ date:     14/03/2024
+@ date:     14/03/2026
 @ license:  MIT License
-@ description: This module implements the bridge between the Python plugin code and the native CoilForge library.
+@ description: This module implements the bridge between the Python plugin code
+    and the native CoilForge library.
 '''
 
 # --- IMPORTS --- #
@@ -21,59 +22,53 @@ OUTPUT_BUFFER_SIZE = 2048
 class CoilForgeBridgeError(RuntimeError):
     '''
     Custom exception for errors related to the CoilForge bridge.
-    
-    Args: [str] A descriptive error message.
-    
-    Returns: An instance of CoilForgeBridgeError with the provided message.
     '''
     pass
 
 
-
 class CoilForgeConfig(ctypes.Structure):
     '''
-    Data structure matching the expected input for the CoilForge native library.
-
-    Args: [C Structure] A ctypes Structure with fields corresponding to the coil configuration parameters.
-
-    Returns: An instance of CoilForgeConfig that can be passed to the native library.
+    ctypes structure matching the CoilForgeConfig C struct expected by the
+    native library.
     '''
-
     _fields_ = [
-        ("hole_radius", ctypes.c_double),       # [mm]    Radius of the hole in the center of the coil
-        ("turns",       ctypes.c_double),       # [#]     Number of coil turns
-        ("track_width", ctypes.c_double),       # [mm]    Track width
-        ("pitch",       ctypes.c_double),       # [mm]    Pitch between coil turns
-        ("center_x",    ctypes.c_double),       # [mm]    Center X coordinate
-        ("center_y",    ctypes.c_double),       # [mm]    Center Y coordinate
-        ("angle",       ctypes.c_double),       # [deg]   Rotation angle in degrees
-        ("layers",      ctypes.c_int),          # [#]     Number of layers
-        ("direction",   ctypes.c_int),          # [0/!]   0 = CW, 1 = CCW
-        ("via_size",    ctypes.c_double),       # [mm]    Via size in mm
-        ("net_name",    ctypes.c_char * 128),   # [char*] Net name as UTF-8 string
+        ("hole_radius",   ctypes.c_double),      # [mm]
+        ("turns",         ctypes.c_double),      # [#]
+        ("track_width",   ctypes.c_double),      # [mm]
+        ("pitch",         ctypes.c_double),      # [mm]
+        ("arc_resolution",ctypes.c_int),         # [#]
+        ("center_x",      ctypes.c_double),      # [mm]
+        ("center_y",      ctypes.c_double),      # [mm]
+        ("angle",         ctypes.c_double),      # [deg]
+        ("layers",        ctypes.c_int),         # [#]
+        ("direction",     ctypes.c_int),         # [-1/1]
+        ("via_size",      ctypes.c_double),      # [mm]
+        ("net_name",      ctypes.c_char * 128),  # UTF-8 string
+    ]
+
+
+class CoilForgeVec2(ctypes.Structure):
+    '''
+    ctypes structure matching the public CoilForgeVec2 C struct returned
+    by the native library.
+    '''
+    _fields_ = [
+        ("x", ctypes.c_double),
+        ("y", ctypes.c_double),
     ]
 
 
 def _get_library_name() -> Path:
     '''
-    Get the appopriate library name according to the current platform/OS.
-
-    Args: None
-
-    Returns: A Path object representing the relative path to the native library file.
-    
-    Note: The actual library files should be named accordingly and placed in the "bin" directory of the plugin package.
+    Get the appropriate library name according to the current platform/OS.
     '''
-
-    # Get the current operating system
     system = platform.system()
 
-    # Determine the library name based on the OS
-    if system == "Darwin":              # macOS
+    if system == "Darwin":
         return Path("macOS") / "libcoilforge.dylib"
-    if system == "Windows":             # Windows
+    if system == "Windows":
         return Path("Windows") / "coilforge.dll"
-    if system == "Linux":               # Linux
+    if system == "Linux":
         return Path("Linux") / "libcoilforge.so"
 
     raise CoilForgeBridgeError(f"Unsupported platform: {system}")
@@ -81,108 +76,158 @@ def _get_library_name() -> Path:
 
 def _get_library_path() -> Path:
     '''
-    Get the full file path to the CoilForge native library based on the current platform.
-
-    Args: None
-
-    Returns: A Path object representing the full path to the native library file.
+    Get the full file path to the CoilForge native library based on the
+    current platform.
     '''
-
-    # Get the relative path to the library
     file_root = Path(__file__).resolve().parents[1]
     return file_root / "bin" / _get_library_name()
 
 
 def load_library() -> ctypes.CDLL:
     '''
-    Load the CoilForge native library using ctypes.
-    Raises CoilForgeBridgeError if the library cannot be loaded.
-
-    Args: None
-
-    Returns: A ctypes.CDLL instance representing the loaded library, ready for function calls.
+    Load the CoilForge native library using ctypes and configure the function
+    signatures required by the plugin.
     '''
-
-    # Get the library path
     lib_path = _get_library_path()
 
-    
     try:
-        # Check if the library file exists
         lib = ctypes.CDLL(str(lib_path))
     except OSError as exc:
         raise CoilForgeBridgeError(
             f"Failed to load CoilForge native library from {lib_path}: {exc}"
         ) from exc
 
-    # Set the argument and return types for the coilforge_process_config function
+    # ------------------------------------------------------------------
+    # coilforge_process_config(const CoilForgeConfig*, char*, size_t) -> int
+    # ------------------------------------------------------------------
     lib.coilforge_process_config.argtypes = [
-        ctypes.POINTER(CoilForgeConfig),    #**< [in] Pointer to the coil configuration
-        ctypes.POINTER(ctypes.c_char),      #**< [out] Buffer to receive the output string
-        ctypes.c_size_t,                    #**< [in] Size of the output buffer
+        ctypes.POINTER(CoilForgeConfig),
+        ctypes.POINTER(ctypes.c_char),
+        ctypes.c_size_t,
     ]
     lib.coilforge_process_config.restype = ctypes.c_int
+
+    # ------------------------------------------------------------
+    # coilforge_get_node_count(const CoilForgeConfig*, int*) -> int
+    # ------------------------------------------------------------
+    lib.coilforge_get_node_count.argtypes = [
+        ctypes.POINTER(CoilForgeConfig),
+        ctypes.POINTER(ctypes.c_int),
+    ]
+    lib.coilforge_get_node_count.restype = ctypes.c_int
+
+    # --------------------------------------------------------------------------
+    # coilforge_generate_nodes(const CoilForgeConfig*, CoilForgeVec2*, int, int*)
+    # --------------------------------------------------------------------------
+    lib.coilforge_generate_nodes.argtypes = [
+        ctypes.POINTER(CoilForgeConfig),
+        ctypes.POINTER(CoilForgeVec2),
+        ctypes.c_int,
+        ctypes.POINTER(ctypes.c_int),
+    ]
+    lib.coilforge_generate_nodes.restype = ctypes.c_int
 
     return lib
 
 
 def to_c_config(config: CoilConfig) -> CoilForgeConfig:
     '''
-    Convert a CoilConfig dataclass instance into a CoilForgeConfig ctypes structure for passing to the native library.
-
-    Args: config [CoilConfig] - The coil configuration data from the plugin dialog.
-
-    Returns: An instance of CoilForgeConfig with fields populated from the provided CoilConfig.
+    Convert a Python CoilConfig dataclass instance into the ctypes structure
+    expected by the native library.
     '''
+    c_cfg = CoilForgeConfig()
 
-    c_cfg               = CoilForgeConfig()                     # Create an instance of the C config structure
-    c_cfg.hole_radius   = config.hole_radius                    # Set hole radius
-    c_cfg.turns         = config.turns                          # Set number of turns
-    c_cfg.track_width   = config.track_width                    # Set track width
-    c_cfg.pitch         = config.pitch                          # Set pitch between coil turns
-    c_cfg.center_x      = config.center_x                       # Set center X coordinate
-    c_cfg.center_y      = config.center_y                       # Set center Y coordinate
-    c_cfg.angle         = config.angle                          # Set rotation angle
-    c_cfg.layers        = config.layers                         # Set number of layers
-    c_cfg.direction     = 0 if config.direction == "CW" else 1  # Convert direction string to int (0 for CW, 1 for CCW)
-    c_cfg.via_size      = config.via_size                       # Set via size
+    c_cfg.hole_radius    = config.hole_radius
+    c_cfg.turns          = config.turns
+    c_cfg.track_width    = config.track_width
+    c_cfg.pitch          = config.pitch
+    c_cfg.arc_resolution = config.arc_resolution
+    c_cfg.center_x       = config.center_x
+    c_cfg.center_y       = config.center_y
+    c_cfg.angle          = config.angle
+    c_cfg.layers         = config.layers
+    c_cfg.direction      = -1 if config.direction == "CW" else 1
+    c_cfg.via_size       = config.via_size
 
-    # Encode the net name as UTF-8 and ensure it fits within the 128 character limit of the C structure
     encoded_name = config.net_name.encode("utf-8")[:127]
-    c_cfg.net_name      = encoded_name                          # Set net name
+    c_cfg.net_name = encoded_name
 
     return c_cfg
 
 
 def run_ctypes_bridge(config: CoilConfig) -> str:
     '''
-    Run the CoilForge native library function via ctypes.
-
-    Args: config [CoilConfig] - The coil configuration data to be processed by the native library.
-
-    Returns: A string output from the native library, decoded from UTF-8.
-    Raises CoilForgeBridgeError if the native function call fails or returns an error.
+    Call the diagnostic native function and return its formatted string output.
     '''
-
-    # Load the library
     lib = load_library()
-
-    # Convert the Python config to the C struct format
     c_cfg = to_c_config(config)
-
-    # Create a buffer to receive the output string from the native library
     out_buffer = ctypes.create_string_buffer(OUTPUT_BUFFER_SIZE)
 
-    # Call the native function and check the return value
     ok = lib.coilforge_process_config(
         ctypes.byref(c_cfg),
         out_buffer,
         ctypes.sizeof(out_buffer),
     )
 
-    # Check if the native function call was successful
     if not ok:
         raise CoilForgeBridgeError("coilforge_process_config returned failure")
 
-    # Decode the output buffer as UTF-8 and return it as a Python string
     return out_buffer.value.decode("utf-8")
+
+
+def get_node_count(config: CoilConfig) -> int:
+    '''
+    Ask the native library how many nodes are required for the current coil.
+    '''
+    lib = load_library()
+    c_cfg = to_c_config(config)
+    out_count = ctypes.c_int(0)
+
+    ok = lib.coilforge_get_node_count(
+        ctypes.byref(c_cfg),
+        ctypes.byref(out_count),
+    )
+
+    if not ok:
+        raise CoilForgeBridgeError("coilforge_get_node_count returned failure")
+
+    if out_count.value <= 0:
+        raise CoilForgeBridgeError(
+            f"coilforge_get_node_count returned invalid node count: {out_count.value}"
+        )
+
+    return out_count.value
+
+
+def generate_nodes(config: CoilConfig) -> list[tuple[float, float]]:
+    '''
+    Generate the centerline node list for the current coil configuration.
+
+    Returns:
+        A Python list of (x, y) tuples in millimeters.
+    '''
+    lib = load_library()
+    c_cfg = to_c_config(config)
+
+    required_count = get_node_count(config)
+
+    node_array_type = CoilForgeVec2 * required_count
+    out_nodes = node_array_type()
+    out_count = ctypes.c_int(0)
+
+    ok = lib.coilforge_generate_nodes(
+        ctypes.byref(c_cfg),
+        out_nodes,
+        required_count,
+        ctypes.byref(out_count),
+    )
+
+    if not ok:
+        raise CoilForgeBridgeError("coilforge_generate_nodes returned failure")
+
+    if out_count.value < 0 or out_count.value > required_count:
+        raise CoilForgeBridgeError(
+            f"coilforge_generate_nodes returned invalid output count: {out_count.value}"
+        )
+
+    return [(out_nodes[i].x, out_nodes[i].y) for i in range(out_count.value)]

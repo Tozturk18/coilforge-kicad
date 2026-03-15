@@ -20,19 +20,38 @@ import wx
 # --- INTERNAL MODULES --- #
 from ..config.config import CoilConfig
 from ..controller.controller import prompt_for_config
-from ..bridge.bridge import run_ctypes_bridge
+from ..bridge.bridge import run_ctypes_bridge, generate_nodes
+from ..arcs.arcs import (
+    add_arcs_to_current_board,
+    delete_group_and_items,
+    get_selected_coilforge_groups,
+    make_coilforge_group_name,
+)
+from ..settings.settings import create_new_coil_id, load_coil_settings, load_settings, save_coil_settings
 
 
 def _resolve_icon_path() -> str:
     """Resolve plugin icon path for both dev and installed KiCad layouts."""
-    module_path = Path(__file__).resolve()
-    package_root = module_path.parents[1]
+    module_paths = [Path(__file__).absolute(), Path(__file__).resolve()]
+    package_roots = []
 
-    candidates = [
-        module_path.parent / "icon.png",
-        package_root.parent / "resources" / "icon.png",
-        package_root.parent.parent / "resources" / package_root.name / "icon.png",
-    ]
+    for module_path in module_paths:
+        package_root = module_path.parents[1]
+        if package_root not in package_roots:
+            package_roots.append(package_root)
+
+    candidates = []
+    for package_root in package_roots:
+        module_dir = package_root / "plugin"
+        resource_dir = package_root.parent / "resources"
+        plugin_id_resource_dir = package_root.parent.parent / "resources" / package_root.name
+
+        candidates.extend([
+            module_dir / "icon.png",
+            package_root / "icon.png",
+            resource_dir / "icon.png",
+            plugin_id_resource_dir / "icon.png",
+        ])
 
     for candidate in candidates:
         if candidate.exists():
@@ -55,6 +74,7 @@ def format_config_summary(config: CoilConfig) -> str:
         f"Turns: {config.turns}\n"
         f"Track Width: {config.track_width} mm\n"
         f"Pitch: {config.pitch} mm\n"
+        f"Arc Resolution: {config.arc_resolution}\n"
         f"Center: ({config.center_x}, {config.center_y}) mm\n"
         f"Angle: {config.angle} deg\n"
         f"Layers: {config.layers}\n"
@@ -87,9 +107,35 @@ class CoilForgePlugin(pcbnew.ActionPlugin):
         coil configuration parameters, validates them, and then calls the native CoilForge library to generate the coil geometry.
         It also handles displaying the output or any errors in message boxes.
         '''
+        board = pcbnew.GetBoard()
+        if board is None:
+            wx.MessageBox(
+                "No active board is open in KiCad.",
+                "CoilForge Error",
+                wx.OK | wx.ICON_ERROR
+            )
+            return
+
+        selected_groups = get_selected_coilforge_groups(board)
+
+        target_group = None
+        if selected_groups:
+            target_group, coil_id = selected_groups[0]
+
+            if len(selected_groups) > 1:
+                wx.MessageBox(
+                    "Multiple CoilForge groups are selected. Only the first selected CoilForge coil will be edited.",
+                    "CoilForge Selection",
+                    wx.OK | wx.ICON_WARNING
+                )
+        else:
+            coil_id = create_new_coil_id()
+
+        initial_config = load_coil_settings(coil_id) or load_settings()
+
         try:
             # Prompt the user for coil configuration parameters using the dialog, and validate the input.
-            submission = prompt_for_config(None)
+            submission = prompt_for_config(None, initial_config=initial_config)
         except ValueError as exc:
             # If there was a validation error (e.g., missing or invalid input), show an error message box to the user.
             wx.MessageBox(
@@ -108,8 +154,21 @@ class CoilForgePlugin(pcbnew.ActionPlugin):
             output = run_ctypes_bridge(submission.config)
             message_style = wx.OK | wx.ICON_INFORMATION
 
-            # If the settings were not saved successfully, append a warning to the output and change the message box style to show a warning icon.
-            if not submission.settings_saved:
+            nodes = generate_nodes(submission.config)
+
+            if target_group is not None:
+                delete_group_and_items(board, target_group)
+
+            add_arcs_to_current_board(
+                nodes=nodes,
+                width_mm=submission.config.track_width,
+                layer_name="F.Cu",
+                net_name=submission.config.net_name,
+                group_name=make_coilforge_group_name(coil_id),
+                save_board=False,
+            )
+
+            if not save_coil_settings(coil_id, submission.config):
                 output = f"{output}\n\nWarning: Settings could not be saved."
                 message_style = wx.OK | wx.ICON_WARNING
 

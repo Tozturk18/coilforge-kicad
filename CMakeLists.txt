@@ -10,6 +10,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+# --------------------------------
+# Platform-specific plugin bin dir
+# --------------------------------
 if(APPLE)
     set(COILFORGE_PLUGIN_PLATFORM_DIR macOS)
 elseif(WIN32)
@@ -21,20 +24,26 @@ else()
 endif()
 
 set(COILFORGE_PLUGIN_BIN_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugins/bin/${COILFORGE_PLUGIN_PLATFORM_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/plugin/plugins/bin/${COILFORGE_PLUGIN_PLATFORM_DIR}"
 )
 
-file(MAKE_DIRECTORY ${COILFORGE_PLUGIN_BIN_DIR})
+file(MAKE_DIRECTORY "${COILFORGE_PLUGIN_BIN_DIR}")
 
 # -----------------------------
 # Sources
 # -----------------------------
 set(COILFORGE_API_SOURCES
     engine/api/coilforge_api.c
+    engine/coil/coil/coil.c
+    engine/geometry/spiral/spiral.c
+    engine/geometry/vec2/vec2.c
 )
 
 set(COILFORGE_API_HEADERS
     engine/api/coilforge_api.h
+    engine/coil/coil/coil.h
+    engine/geometry/spiral/spiral.h
+    engine/geometry/vec2/vec2.h
 )
 
 # -----------------------------
@@ -52,7 +61,10 @@ target_compile_definitions(coilforge
 
 target_include_directories(coilforge
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/engine/api
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/api"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/coil/coil"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/geometry/spiral"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/geometry/vec2"
 )
 
 target_compile_options(coilforge
@@ -62,19 +74,20 @@ target_compile_options(coilforge
         -Wpedantic
 )
 
-# On macOS/Linux, this will produce libcoilforge.dylib / libcoilforge.so
 set_target_properties(coilforge PROPERTIES
     OUTPUT_NAME "coilforge"
-    LIBRARY_OUTPUT_DIRECTORY ${COILFORGE_PLUGIN_BIN_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${COILFORGE_PLUGIN_BIN_DIR}
+    LIBRARY_OUTPUT_DIRECTORY "${COILFORGE_PLUGIN_BIN_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${COILFORGE_PLUGIN_BIN_DIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${COILFORGE_PLUGIN_BIN_DIR}"
 )
 
 # Keep outputs out of per-config subfolders on multi-config generators.
 foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
-    string(TOUPPER ${CONFIG_TYPE} CONFIG_UPPER)
+    string(TOUPPER "${CONFIG_TYPE}" CONFIG_UPPER)
     set_target_properties(coilforge PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${COILFORGE_PLUGIN_BIN_DIR}
-        RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER} ${COILFORGE_PLUGIN_BIN_DIR}
+        LIBRARY_OUTPUT_DIRECTORY_${CONFIG_UPPER} "${COILFORGE_PLUGIN_BIN_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY_${CONFIG_UPPER} "${COILFORGE_PLUGIN_BIN_DIR}"
+        ARCHIVE_OUTPUT_DIRECTORY_${CONFIG_UPPER} "${COILFORGE_PLUGIN_BIN_DIR}"
     )
 endforeach()
 
@@ -87,7 +100,10 @@ add_executable(coilforge_cli
 
 target_include_directories(coilforge_cli
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/engine/api
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/api"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/coil/coil"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/geometry/spiral"
+        "${CMAKE_CURRENT_SOURCE_DIR}/engine/geometry/vec2"
 )
 
 target_link_libraries(coilforge_cli

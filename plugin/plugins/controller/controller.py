@@ -14,7 +14,6 @@ import wx
 
 from ..config.config import CoilConfig
 from ..dialog_ui.dialog_ui import CoilForgeDialog
-from ..settings.settings import load_settings, save_settings
 from ..validator.validator import parse_config
 
 
@@ -26,10 +25,12 @@ class DialogSubmission:
     Data class representing the result of a successful dialog submission.
     '''
     config: CoilConfig      # The validated configuration submitted by the user
-    settings_saved: bool    # Whether the settings were successfully saved to disk
 
 
-def prompt_for_config(parent: Optional[wx.Window] = None) -> Optional["DialogSubmission"]:
+def prompt_for_config(
+    parent: Optional[wx.Window] = None,
+    initial_config: Optional[CoilConfig] = None,
+) -> Optional["DialogSubmission"]:
     """
     Open the CoilForge dialog, validate submitted values, and persist them.
 
@@ -37,9 +38,6 @@ def prompt_for_config(parent: Optional[wx.Window] = None) -> Optional["DialogSub
     Returns None when the user cancels it.
     Raises ValueError when submitted values are invalid.
     """
-
-    # Load initial settings to pre-populate the dialog fields
-    initial_config = load_settings()
 
     # Create and show the dialog
     dialog = CoilForgeDialog(parent, initial_config=initial_config)
@@ -49,9 +47,9 @@ def prompt_for_config(parent: Optional[wx.Window] = None) -> Optional["DialogSub
         if dialog.ShowModal() != wx.ID_OK:
             return None
 
-        # Parse and validate the submitted values, then save settings
+        # Parse and validate the submitted values
         config = parse_config(dialog.get_input_values())
-        return DialogSubmission(config=config, settings_saved=save_settings(config))
+        return DialogSubmission(config=config)
     finally:
         # Ensure the dialog is destroyed to free resources
         dialog.Destroy()

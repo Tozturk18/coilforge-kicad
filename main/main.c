@@ -33,6 +33,9 @@ static int parse_args(int argc, char *argv[], CoilForgeConfig *cfg) {
             cfg->pitch = atof(argv[++i]);
             saw_pitch = 1;
         }
+        else if (strcmp(argv[i], "-R") == 0) {
+            cfg->arc_resolution = atoi(argv[++i]);
+        }
         else if (strcmp(argv[i], "-s") == 0) {
             legacy_spacing = atof(argv[++i]);
             saw_legacy_spacing = 1;
@@ -53,7 +56,7 @@ static int parse_args(int argc, char *argv[], CoilForgeConfig *cfg) {
             const char *direction = argv[++i];
 
             if (strcmp(direction, "CW") == 0) {
-                cfg->direction = 0;
+                cfg->direction = -1;
             }
             else if (strcmp(direction, "CCW") == 0) {
                 cfg->direction = 1;

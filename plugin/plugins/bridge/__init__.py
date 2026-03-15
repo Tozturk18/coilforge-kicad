@@ -4,4 +4,5 @@ from .bridge import (
     load_library,
     run_ctypes_bridge,
     to_c_config,
+    generate_nodes,
 )

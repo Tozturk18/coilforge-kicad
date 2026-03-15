@@ -25,6 +25,7 @@ FIELD_LABELS = {
     "turns"       : "Number of Coil Turns",
     "track_width" : "Track Width (mm)",
     "pitch"       : "Pitch (mm)",
+    "arc_resolution": "Arc Resolution",
     "center_x"    : "Center X Position (mm)",
     "center_y"    : "Center Y Position (mm)",
     "angle"       : "Angle (deg)",
@@ -97,6 +98,7 @@ def parse_config(raw_values: dict[str, Any]) -> CoilConfig:
         turns       = parse_float(get_required_value(raw_values, "turns"),       "turns"),
         track_width = parse_float(get_required_value(raw_values, "track_width"), "track_width"),
         pitch       = parse_float(get_required_value(raw_values, "pitch"),       "pitch"),
+        arc_resolution = parse_int(get_required_value(raw_values, "arc_resolution"), "arc_resolution"),
         center_x    = parse_float(get_required_value(raw_values, "center_x"),    "center_x"),
         center_y    = parse_float(get_required_value(raw_values, "center_y"),    "center_y"),
         angle       = parse_float(get_required_value(raw_values, "angle"),       "angle"),
@@ -134,6 +136,12 @@ def validate_config(config: CoilConfig) -> None:
 
     if config.pitch < config.track_width:
         raise ValueError("Pitch (mm) must be greater than or equal to Track Width (mm).")
+
+    if config.arc_resolution < 2:
+        raise ValueError("Arc Resolution must be at least 2.")
+
+    if config.arc_resolution % 2 != 0:
+        raise ValueError("Arc Resolution must be a multiple of 2.")
 
     if config.layers < 1:
         raise ValueError("Layers must be at least 1.")
