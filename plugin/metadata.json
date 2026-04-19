@@ -29,8 +29,8 @@
             "kicad_version": "10.0",
             "runtime": "swig",
             "download_url": "https://github.com/Tozturk18/coilforge-kicad/releases/download/v0.1.0/coilforge-kicad-0.1.0.zip",
-            "download_size": 25000,
-            "install_size": 89000
+            "download_size": 40744,
+            "install_size": 128029
         }
     ]
 }

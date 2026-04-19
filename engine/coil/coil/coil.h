@@ -10,6 +10,7 @@ typedef struct
     CF_Vec2 *nodes;
     int      node_count;
     CF_Vec2  via_node;
+    CF_Vec2  via_center;
     int      has_via;
 } CF_Coil;
 

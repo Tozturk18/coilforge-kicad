@@ -1,1 +1,1 @@
-from .plugin import CoilForgePlugin, format_config_summary
+from .plugin import CoilForgePlugin

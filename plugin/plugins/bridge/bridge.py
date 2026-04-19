@@ -58,6 +58,17 @@ class CoilForgeVec2(ctypes.Structure):
     ]
 
 
+class CoilForgeViaResult(ctypes.Structure):
+    '''
+    ctypes structure matching CoilForgeViaResult from the public C API.
+    '''
+    _fields_ = [
+        ("has_via", ctypes.c_int),
+        ("via_node", CoilForgeVec2),
+        ("via_center", CoilForgeVec2),
+    ]
+
+
 def _get_library_name() -> Path:
     '''
     Get the appropriate library name according to the current platform/OS.
@@ -79,7 +90,7 @@ def _get_library_path() -> Path:
     Get the full file path to the CoilForge native library based on the
     current platform.
     '''
-    file_root = Path(__file__).resolve().parents[1]
+    file_root = Path(__file__).resolve().parents[2]
     return file_root / "bin" / _get_library_name()
 
 
@@ -126,6 +137,15 @@ def load_library() -> ctypes.CDLL:
         ctypes.POINTER(ctypes.c_int),
     ]
     lib.coilforge_generate_nodes.restype = ctypes.c_int
+
+    # ------------------------------------------------------------------
+    # coilforge_get_via_result(const CoilForgeConfig*, CoilForgeViaResult*) -> int
+    # ------------------------------------------------------------------
+    lib.coilforge_get_via_result.argtypes = [
+        ctypes.POINTER(CoilForgeConfig),
+        ctypes.POINTER(CoilForgeViaResult),
+    ]
+    lib.coilforge_get_via_result.restype = ctypes.c_int
 
     return lib
 
@@ -231,3 +251,31 @@ def generate_nodes(config: CoilConfig) -> list[tuple[float, float]]:
         )
 
     return [(out_nodes[i].x, out_nodes[i].y) for i in range(out_count.value)]
+
+
+def get_via_result(config: CoilConfig) -> dict:
+    '''
+    Query via geometry computed by the native coil generator.
+
+    Returns a dictionary containing:
+        has_via: bool
+        via_node: (x, y)
+        via_center: (x, y)
+    '''
+    lib = load_library()
+    c_cfg = to_c_config(config)
+    out_via = CoilForgeViaResult()
+
+    ok = lib.coilforge_get_via_result(
+        ctypes.byref(c_cfg),
+        ctypes.byref(out_via),
+    )
+
+    if not ok:
+        raise CoilForgeBridgeError("coilforge_get_via_result returned failure")
+
+    return {
+        "has_via": bool(out_via.has_via),
+        "via_node": (out_via.via_node.x, out_via.via_node.y),
+        "via_center": (out_via.via_center.x, out_via.via_center.y),
+    }

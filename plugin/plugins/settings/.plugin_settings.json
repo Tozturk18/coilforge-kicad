@@ -1,0 +1,54 @@
+{
+  "$schema": "https://go.kicad.org/pcm/schemas/v2",
+  "name": "CoilForge",
+  "description": "A KiCad plugin for generating PCB coils and BLDC motor geometries.",
+  "description_full": "CoilForge is a KiCad addon for generating parametrically defined PCB coils and future BLDC motor layouts from user-specified geometry and routing parameters.",
+  "identifier": "com.github.tozturk18.coilforge-kicad",
+  "type": "plugin",
+  "author": {
+    "name": "Ozgur Tuna Ozturk",
+    "contact": {
+      "web": "https://github.com/Tozturk18/coilforge-kicad"
+    }
+  },
+  "maintainer": {
+    "name": "Tozturk18",
+    "contact": {
+      "web": "https://tozturk18.github.io"
+    }
+  },
+  "license": "MIT",
+  "resources": {
+    "homepage": "https://github.com/Tozturk18/coilforge-kicad",
+    "repository": "https://github.com/Tozturk18/coilforge-kicad"
+  },
+  "versions": [
+    {
+      "version": "0.1.0",
+      "status": "development",
+      "kicad_version": "10.0",
+      "runtime": "swig",
+      "download_url": "https://github.com/Tozturk18/coilforge-kicad/releases/download/v0.1.0/coilforge-kicad-0.1.0.zip",
+      "download_size": 25000,
+      "install_size": 89000
+    }
+  ],
+  "plugin_runtime": {
+    "coilforge_schema_version": 1,
+    "coilforge_group_prefix": "CoilForge:",
+    "default_config": {
+      "hole_radius": 0.0,
+      "turns": 10.0,
+      "track_width": 0.25,
+      "pitch": 0.45,
+      "arc_resolution": 2,
+      "center_x": 0.0,
+      "center_y": 0.0,
+      "angle": 0.0,
+      "layers": 2,
+      "direction": "CW",
+      "net_name": "COIL_NET",
+      "via_size": 0.45
+    }
+  }
+}

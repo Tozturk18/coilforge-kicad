@@ -17,7 +17,7 @@
 import json
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 # --- LOCAL IMPORTS --- #
 from ..config.config import CoilConfig
@@ -25,23 +25,102 @@ from ..config.config import CoilConfig
 
 # --- CONSTANTS --- #
 
-DEFAULT_CONFIG = CoilConfig(
-    hole_radius = 0.0,
-    turns       = 10.0,
-    track_width = 0.25,
-    pitch       = 0.45,
+_PLUGIN_SETTINGS_FILE = Path(__file__).with_name(".plugin_settings.json")
+
+_FALLBACK_DEFAULT_CONFIG = CoilConfig(
+    hole_radius    = 0.0,
+    turns          = 10.0,
+    track_width    = 0.25,
+    pitch          = 0.45,
     arc_resolution = 2,
-    center_x    = 0.0,
-    center_y    = 0.0,
-    angle       = 0.0,
-    layers      = 2,
-    direction   = "CW",
-    net_name    = "COIL_NET",
-    via_size    = 0.45
+    center_x       = 0.0,
+    center_y       = 0.0,
+    angle          = 0.0,
+    layers         = 2,
+    direction      = "CW",
+    net_name       = "COIL_NET",
+    via_size       = 0.45
 )
 
-COILFORGE_SCHEMA_VERSION = 1
+_FALLBACK_COILFORGE_SCHEMA_VERSION = 1
+_FALLBACK_COILFORGE_GROUP_PREFIX = "CoilForge:"
 
+
+def _read_plugin_settings_file() -> dict[str, Any]:
+    """Read plugin-wide settings from the colocated hidden JSON file."""
+    try:
+        with _PLUGIN_SETTINGS_FILE.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return {}
+
+    return data if isinstance(data, dict) else {}
+
+
+def _runtime_settings() -> dict[str, Any]:
+    """Return the plugin_runtime section from plugin settings JSON."""
+    runtime = _PLUGIN_SETTINGS.get("plugin_runtime")
+    return runtime if isinstance(runtime, dict) else {}
+
+
+def _default_config_from_runtime_settings() -> CoilConfig:
+    """Build DEFAULT_CONFIG from plugin settings with safe field-level fallback."""
+    data = _runtime_settings().get("default_config")
+    if not isinstance(data, dict):
+        return _FALLBACK_DEFAULT_CONFIG
+
+    track_width = float(data.get("track_width", _FALLBACK_DEFAULT_CONFIG.track_width))
+    pitch_value = data.get("pitch")
+
+    if pitch_value is None:
+        spacing_value = float(data.get("spacing", _FALLBACK_DEFAULT_CONFIG.pitch - track_width))
+        pitch = spacing_value + track_width
+    else:
+        pitch = float(pitch_value)
+
+    return CoilConfig(
+        hole_radius = float(data.get("hole_radius", _FALLBACK_DEFAULT_CONFIG.hole_radius)),
+        turns       = float(data.get("turns",          _FALLBACK_DEFAULT_CONFIG.turns)),
+        track_width = track_width,
+        pitch       = pitch,
+        arc_resolution = int(data.get("arc_resolution", _FALLBACK_DEFAULT_CONFIG.arc_resolution)),
+        center_x    = float(data.get("center_x",    _FALLBACK_DEFAULT_CONFIG.center_x)),
+        center_y    = float(data.get("center_y",    _FALLBACK_DEFAULT_CONFIG.center_y)),
+        angle       = float(data.get("angle",       _FALLBACK_DEFAULT_CONFIG.angle)),
+        layers      = int(data.get("layers",        _FALLBACK_DEFAULT_CONFIG.layers)),
+        direction   = str(data.get("direction",     _FALLBACK_DEFAULT_CONFIG.direction)),
+        net_name    = str(data.get("net_name",      _FALLBACK_DEFAULT_CONFIG.net_name)),
+        via_size    = float(data.get("via_size",    _FALLBACK_DEFAULT_CONFIG.via_size)),
+    )
+
+
+def _schema_version_from_runtime_settings() -> int:
+    """Read coilforge schema version from plugin settings, with fallback."""
+    try:
+        return int(_runtime_settings().get("coilforge_schema_version", _FALLBACK_COILFORGE_SCHEMA_VERSION))
+    except (TypeError, ValueError):
+        return _FALLBACK_COILFORGE_SCHEMA_VERSION
+
+
+def _group_prefix_from_runtime_settings() -> str:
+    """Read group prefix from plugin settings, with fallback."""
+    value = _runtime_settings().get("coilforge_group_prefix", _FALLBACK_COILFORGE_GROUP_PREFIX)
+    return str(value) if value else _FALLBACK_COILFORGE_GROUP_PREFIX
+
+
+_PLUGIN_SETTINGS = _read_plugin_settings_file()
+
+
+def get_plugin_settings() -> dict[str, Any]:
+    """Return plugin-level settings loaded from .plugin_settings.json."""
+    return dict(_PLUGIN_SETTINGS)
+
+
+DEFAULT_CONFIG = _default_config_from_runtime_settings()
+
+COILFORGE_SCHEMA_VERSION = _schema_version_from_runtime_settings()
+
+COILFORGE_GROUP_PREFIX = _group_prefix_from_runtime_settings()
 
 # --- INTERNAL HELPERS --- #
 
@@ -50,24 +129,36 @@ def _config_to_dict(config: CoilConfig) -> dict:
     Convert CoilConfig into the JSON schema stored inside .kicad_pro.
     """
     return {
-        "hole_radius":  config.hole_radius,
-        "turns":           config.turns,
-        "track_width":  config.track_width,
-        "pitch":        config.pitch,
-        "arc_resolution": config.arc_resolution,
-        "center_x":     config.center_x,
-        "center_y":     config.center_y,
-        "angle":       config.angle,
-        "layers":          config.layers,
-        "direction":       config.direction,
-        "net_name":        config.net_name,
-        "via_size":     config.via_size
+        "hole_radius"    : config.hole_radius,
+        "turns"          : config.turns,
+        "track_width"    : config.track_width,
+        "pitch"          : config.pitch,
+        "arc_resolution" : config.arc_resolution,
+        "center_x"       : config.center_x,
+        "center_y"       : config.center_y,
+        "angle"          : config.angle,
+        "layers"         : config.layers,
+        "direction"      : config.direction,
+        "net_name"       : config.net_name,
+        "via_size"       : config.via_size
     }
 
 
 def _is_legacy_single_config(data: dict) -> bool:
     """Return True when the payload looks like the older single-config schema."""
     return "coils" not in data and ("hole_radius" in data or "pitch" in data or "spacing" in data)
+
+
+def _extract_project_config_dict(coilforge_data: dict) -> dict:
+    """Extract project-level default config payload from current or legacy schema."""
+    project_config = coilforge_data.get("project_config")
+    if isinstance(project_config, dict):
+        return project_config
+
+    if _is_legacy_single_config(coilforge_data):
+        return coilforge_data
+
+    return {}
 
 
 def _extract_coils_dict(coilforge_data: dict) -> dict[str, dict]:
@@ -82,10 +173,14 @@ def _extract_coils_dict(coilforge_data: dict) -> dict[str, dict]:
     return {}
 
 
-def _coilforge_payload_from_configs(coils: dict[str, CoilConfig]) -> dict:
+def _coilforge_payload_from_configs(
+    project_config: CoilConfig,
+    coils: dict[str, CoilConfig],
+) -> dict:
     """Build the persisted coilforge JSON payload."""
     return {
         "version": COILFORGE_SCHEMA_VERSION,
+        "project_config": _config_to_dict(project_config),
         "coils": {coil_id: _config_to_dict(config) for coil_id, config in coils.items()},
     }
 
@@ -219,6 +314,21 @@ def _load_coils_from_project_data(project_data: dict) -> dict[str, CoilConfig]:
     return coils
 
 
+def _load_project_config_from_project_data(project_data: dict) -> CoilConfig:
+    """Parse project-level default CoilForge settings from loaded .kicad_pro JSON."""
+    coilforge_data = project_data.get("plugins", {}).get("coilforge", {})
+    project_config_data = _extract_project_config_dict(coilforge_data)
+
+    if not project_config_data:
+        coils = _load_coils_from_project_data(project_data)
+        return _first_coil_config(coils)
+
+    try:
+        return _dict_to_config(project_config_data)
+    except (TypeError, ValueError):
+        return DEFAULT_CONFIG
+
+
 def _first_coil_config(coils: dict[str, CoilConfig]) -> CoilConfig:
     """Return the first config in stable key order, or DEFAULT_CONFIG."""
     if not coils:
@@ -264,8 +374,7 @@ def load_settings() -> CoilConfig:
         return DEFAULT_CONFIG
 
     try:
-        coils = _load_coils_from_project_data(project_data)
-        return _first_coil_config(coils)
+        return _load_project_config_from_project_data(project_data)
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
         return DEFAULT_CONFIG
 
@@ -307,13 +416,110 @@ def save_coil_settings(coil_id: str, config: CoilConfig) -> bool:
     if project_data is None:
         return False
 
+    project_config = _load_project_config_from_project_data(project_data)
     coils = _load_coils_from_project_data(project_data)
     coils[coil_id] = config
 
     project_data.setdefault("plugins", {})
-    project_data["plugins"]["coilforge"] = _coilforge_payload_from_configs(coils)
+    project_data["plugins"]["coilforge"] = _coilforge_payload_from_configs(project_config, coils)
 
     return _write_project_json(project_path, project_data)
+
+
+def _iter_container_items(container):
+    """Iterate KiCad SWIG containers across API variants."""
+    if container is None:
+        return
+
+    if hasattr(container, "GetCount") and hasattr(container, "GetItem"):
+        for i in range(container.GetCount()):
+            yield container.GetItem(i)
+        return
+
+    if hasattr(container, "Size") and hasattr(container, "Item"):
+        for i in range(container.Size()):
+            yield container.Item(i)
+        return
+
+    try:
+        for item in container:
+            yield item
+    except TypeError:
+        return
+
+
+def _iter_board_groups(board):
+    """Yield board groups across KiCad API variants."""
+    if board is None:
+        return
+
+    if hasattr(board, "Groups"):
+        yield from _iter_container_items(board.Groups())
+        return
+
+    if hasattr(board, "GetGroups"):
+        yield from _iter_container_items(board.GetGroups())
+
+
+def _board_coil_ids(board) -> set[str]:
+    """Collect CoilForge coil ids currently present on the board by group name."""
+    from ..arcs.arcs import coil_id_from_group_name
+
+    coil_ids: set[str] = set()
+    for group in _iter_board_groups(board):
+        group_name = group.GetName() if hasattr(group, "GetName") else ""
+        coil_id = coil_id_from_group_name(group_name)
+        if coil_id:
+            coil_ids.add(coil_id)
+
+    return coil_ids
+
+
+def reconcile_settings(board=None) -> bool:
+    """
+    Remove per-coil settings that are not present in the currently loaded board.
+
+    Project-level default settings are preserved.
+    """
+    if board is None:
+        try:
+            import pcbnew
+            board = pcbnew.GetBoard()
+        except Exception:
+            board = None
+
+    project_path = get_project_path()
+    if project_path is None:
+        return False
+
+    project_data = _read_project_json(project_path)
+    if project_data is None:
+        return False
+
+    project_config = _load_project_config_from_project_data(project_data)
+    saved_coils = _load_coils_from_project_data(project_data)
+
+    if not saved_coils:
+        return True
+
+    board_ids = _board_coil_ids(board)
+    pruned_coils = {
+        coil_id: config
+        for coil_id, config in saved_coils.items()
+        if coil_id in board_ids
+    }
+
+    if len(pruned_coils) == len(saved_coils):
+        return True
+
+    project_data.setdefault("plugins", {})
+    project_data["plugins"]["coilforge"] = _coilforge_payload_from_configs(project_config, pruned_coils)
+
+    return _write_project_json(project_path, project_data)
+
+
+# Backward-compatible alias for older imports.
+reconcile_coil_settings_with_board = reconcile_settings
 
 
 def save_settings(config: CoilConfig) -> bool:
@@ -331,11 +537,17 @@ def save_settings(config: CoilConfig) -> bool:
     Returns:
         True if save succeeds, otherwise False.
     """
-    coils = load_all_coils()
+    project_path = get_project_path()
+    if project_path is None:
+        return False
 
-    if coils:
-        target_coil_id = sorted(coils.keys())[0]
-    else:
-        target_coil_id = "coil_0001"
+    project_data = _read_project_json(project_path)
+    if project_data is None:
+        return False
 
-    return save_coil_settings(target_coil_id, config)
+    coils = _load_coils_from_project_data(project_data)
+
+    project_data.setdefault("plugins", {})
+    project_data["plugins"]["coilforge"] = _coilforge_payload_from_configs(config, coils)
+
+    return _write_project_json(project_path, project_data)

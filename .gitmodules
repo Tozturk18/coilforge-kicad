@@ -1,3 +1,0 @@
-[submodule "libs/TextToMath"]
-    path = external/TextToMath
-    url = git@github.com:Tozturk18/TextToMath.git

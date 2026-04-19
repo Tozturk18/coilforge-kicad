@@ -58,6 +58,16 @@ typedef struct
 } CoilForgeVec2;
 
 /*
+ * Via geometry result for the generated coil.
+ */
+typedef struct
+{
+    int has_via;
+    CoilForgeVec2 via_node;
+    CoilForgeVec2 via_center;
+} CoilForgeViaResult;
+
+/*
  * Process the coil configuration and generate a formatted output string.
  * Returns non-zero on success, 0 on failure.
  */
@@ -90,6 +100,15 @@ COILFORGE_API int coilforge_generate_nodes(
     CoilForgeVec2 *out_nodes,
     int max_nodes,
     int *out_node_count
+);
+
+/*
+ * Compute via attachment/center geometry for the generated coil.
+ * Returns non-zero on success, 0 on failure.
+ */
+COILFORGE_API int coilforge_get_via_result(
+    const CoilForgeConfig *config,
+    CoilForgeViaResult *out_via_result
 );
 
 #ifdef __cplusplus

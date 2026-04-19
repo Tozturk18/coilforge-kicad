@@ -9,9 +9,7 @@ import time
 
 import pcbnew
 
-
-COILFORGE_GROUP_PREFIX = "CoilForge:"
-
+from ..settings.settings import COILFORGE_GROUP_PREFIX
 
 def make_coilforge_group_name(coil_id: str) -> str:
     """Build a stable CoilForge group name for the provided coil id."""
@@ -54,10 +52,10 @@ def _iter_selection_items(selection):
         return
 
 
-def _get_selected_items(board) -> list:
-    """Get currently selected board items, or an empty list."""
+def _get_selected_items(board):
+    """Yield currently selected board items, or nothing when unavailable."""
     if board is None:
-        return []
+        return ()
 
     selection = None
     if hasattr(board, "GetCurrentSelection"):
@@ -65,7 +63,7 @@ def _get_selected_items(board) -> list:
     elif hasattr(pcbnew, "GetCurrentSelection"):
         selection = pcbnew.GetCurrentSelection()
 
-    return list(_iter_selection_items(selection))
+    return _iter_selection_items(selection)
 
 
 def get_selected_coilforge_groups(board=None) -> list[tuple[object, str]]:
@@ -75,20 +73,18 @@ def get_selected_coilforge_groups(board=None) -> list[tuple[object, str]]:
     if board is None:
         board = pcbnew.GetBoard()
 
-    selected_groups: list[tuple[object, str]] = []
-    seen_groups: set[int] = set()
+    selected_groups_by_id: dict[int, tuple[object, str]] = {}
 
     for item in _get_selected_items(board):
-        group = item if isinstance(item, pcbnew.PCB_GROUP) else None
-
-        if group is None and hasattr(item, "GetParentGroup"):
-            group = item.GetParentGroup()
+        group = item if isinstance(item, pcbnew.PCB_GROUP) else (
+            item.GetParentGroup() if hasattr(item, "GetParentGroup") else None
+        )
 
         if group is None:
             continue
 
         group_key = id(group)
-        if group_key in seen_groups:
+        if group_key in selected_groups_by_id:
             continue
 
         group_name = group.GetName() if hasattr(group, "GetName") else ""
@@ -96,10 +92,9 @@ def get_selected_coilforge_groups(board=None) -> list[tuple[object, str]]:
         if coil_id is None:
             continue
 
-        seen_groups.add(group_key)
-        selected_groups.append((group, coil_id))
+        selected_groups_by_id[group_key] = (group, coil_id)
 
-    return selected_groups
+    return list(selected_groups_by_id.values())
 
 
 def _iter_group_items(group):
@@ -261,6 +256,65 @@ def build_pcb_arcs_from_nodes(
     return arcs
 
 
+def build_pcb_via(
+    board,
+    center_mm: tuple[float, float],
+    diameter_mm: float,
+    layer_pair: tuple[str, str] = ("F.Cu", "B.Cu"),
+    net_name: str | None = None,
+):
+    """
+    Build one PCB via with a conservative drill ratio and optional net assignment.
+    """
+    via = pcbnew.PCB_VIA(board)
+    via.SetPosition(_to_iu_point(*center_mm))
+    via.SetWidth(int(round(pcbnew.FromMM(diameter_mm))))
+
+    drill_mm = max(0.15, 0.5 * diameter_mm)
+    drill_iu = int(round(pcbnew.FromMM(drill_mm)))
+
+    if hasattr(via, "SetDrill"):
+        via.SetDrill(drill_iu)
+    elif hasattr(via, "SetDrillDiameter"):
+        via.SetDrillDiameter(drill_iu)
+
+    if hasattr(via, "SetLayerPair"):
+        top_id = board.GetLayerID(layer_pair[0])
+        bottom_id = board.GetLayerID(layer_pair[1])
+        via.SetLayerPair(top_id, bottom_id)
+
+    if net_name:
+        netinfo = board.FindNet(net_name)
+        if netinfo is not None:
+            via.SetNet(netinfo)
+
+    return via
+
+
+def build_pcb_vias(
+    board,
+    centers_mm: list[tuple[float, float]],
+    diameter_mm: float,
+    net_name: str | None = None,
+):
+    """Convert via-center coordinates into a list of PCB_VIA objects."""
+    vias = []
+
+    if diameter_mm <= 0.0:
+        return vias
+
+    for center_mm in centers_mm:
+        via = build_pcb_via(
+            board=board,
+            center_mm=center_mm,
+            diameter_mm=diameter_mm,
+            net_name=net_name,
+        )
+        vias.append(via)
+
+    return vias
+
+
 def create_pcb_group(board, group_name: str | None = None):
     """
     Create a new PCB group on the board.
@@ -303,6 +357,8 @@ def build_grouped_pcb_arcs_from_nodes(
     layer_name: str = "F.Cu",
     net_name: str | None = None,
     group_name: str | None = None,
+    via_centers_mm: list[tuple[float, float]] | None = None,
+    via_diameter_mm: float = 0.0,
 ):
     """
     Convert a CoilForge node list into KiCad PCB arcs, add them to the board,
@@ -317,9 +373,10 @@ def build_grouped_pcb_arcs_from_nodes(
         group_name: Optional group name.
 
     Returns:
-        (group, arcs)
+        (group, arcs, vias)
         group: pcbnew.PCB_GROUP
         arcs: list of pcbnew.PCB_ARC
+        vias: list of pcbnew.PCB_VIA
     """
     arcs = build_pcb_arcs_from_nodes(
         board=board,
@@ -332,13 +389,24 @@ def build_grouped_pcb_arcs_from_nodes(
     for arc in arcs:
         board.Add(arc)
 
+    vias = build_pcb_vias(
+        board=board,
+        centers_mm=via_centers_mm or [],
+        diameter_mm=via_diameter_mm,
+        net_name=net_name,
+    )
+
+    for via in vias:
+        board.Add(via)
+
     if group_name is None:
         group_name = make_coilforge_group_name(str(int(time.time())))
 
     group = create_pcb_group(board, group_name=group_name)
     add_items_to_group(group, arcs)
+    add_items_to_group(group, vias)
 
-    return group, arcs
+    return group, arcs, vias
 
 
 def add_arcs_to_current_board(
@@ -347,6 +415,8 @@ def add_arcs_to_current_board(
     layer_name: str = "F.Cu",
     net_name: str | None = None,
     group_name: str | None = None,
+    via_centers_mm: list[tuple[float, float]] | None = None,
+    via_diameter_mm: float = 0.0,
     save_board: bool = False,
 ):
     """
@@ -362,21 +432,24 @@ def add_arcs_to_current_board(
         save_board: If True, save the board after adding the grouped coil.
 
     Returns:
-        (group, arcs)
+        (group, arcs, vias)
         group: pcbnew.PCB_GROUP
         arcs: list of added pcbnew.PCB_ARC objects
+        vias: list of added pcbnew.PCB_VIA objects
     """
     board = pcbnew.GetBoard()
     if board is None:
         raise RuntimeError("No active board is open in KiCad.")
 
-    group, arcs = build_grouped_pcb_arcs_from_nodes(
+    group, arcs, vias = build_grouped_pcb_arcs_from_nodes(
         board=board,
         nodes=nodes,
         width_mm=width_mm,
         layer_name=layer_name,
         net_name=net_name,
         group_name=group_name,
+        via_centers_mm=via_centers_mm,
+        via_diameter_mm=via_diameter_mm,
     )
 
     pcbnew.Refresh()
@@ -388,4 +461,4 @@ def add_arcs_to_current_board(
             if not ok:
                 raise RuntimeError(f"Failed to save board to: {board_file}")
 
-    return group, arcs
+    return group, arcs, vias

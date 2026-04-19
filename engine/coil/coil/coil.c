@@ -13,6 +13,7 @@ static void cf_coil_init(CF_Coil *coil)
     coil->nodes = NULL;
     coil->node_count = 0;
     coil->via_node = cf_vec2(0.0, 0.0);
+    coil->via_center = cf_vec2(0.0, 0.0);
     coil->has_via = 0;
 }
 
@@ -27,7 +28,68 @@ void cf_coil_free(CF_Coil *coil)
     coil->nodes = NULL;
     coil->node_count = 0;
     coil->via_node = cf_vec2(0.0, 0.0);
+    coil->via_center = cf_vec2(0.0, 0.0);
     coil->has_via = 0;
+}
+
+static double cf_clamp(double value, double min_value, double max_value)
+{
+    if (value < min_value)
+    {
+        return min_value;
+    }
+
+    if (value > max_value)
+    {
+        return max_value;
+    }
+
+    return value;
+}
+
+static CF_Vec2 cf_vec2_perp_ccw(CF_Vec2 v)
+{
+    return cf_vec2(-v.y, v.x);
+}
+
+static CF_Vec2 cf_coil_trimmed_end_point(
+    const CoilForgeConfig *config,
+    const CF_SpiralParams *params
+)
+{
+    double u_trim = cf_spiral_trimmed_end_u(params, config->via_size);
+    CF_Vec2 local_trimmed = cf_spiral_directional_point(u_trim, params);
+
+    return cf_vec2(
+        local_trimmed.x + config->center_x,
+        local_trimmed.y + config->center_y
+    );
+}
+
+static CF_Vec2 cf_coil_compute_via_center(
+    const CoilForgeConfig *config,
+    CF_Vec2 via_node,
+    CF_Vec2 prev_node
+)
+{
+    double via_radius = 0.5 * config->via_size;
+    double half_pitch = 0.5 * config->pitch;
+    double normal_offset = cf_clamp(half_pitch, 0.0, via_radius);
+    double tangent_offset = sqrt(
+        cf_clamp(
+            via_radius * via_radius - normal_offset * normal_offset,
+            0.0,
+            via_radius * via_radius
+        )
+    );
+
+    CF_Vec2 tangent = cf_vec2_normalize(cf_vec2_sub(via_node, prev_node));
+    CF_Vec2 normal = cf_vec2_perp_ccw(tangent);
+
+    CF_Vec2 tangent_part = cf_vec2_scale(tangent, tangent_offset);
+    CF_Vec2 normal_part = cf_vec2_scale(normal, -(double)config->direction * normal_offset);
+
+    return cf_vec2_add(via_node, cf_vec2_add(tangent_part, normal_part));
 }
 
 int cf_coil_get_node_count(const CoilForgeConfig *config, int *out_node_count)
@@ -241,7 +303,19 @@ int cf_coil_generate_single_layer(const CoilForgeConfig *config, CF_Coil *coil)
     free(q_values);
 
     coil->via_node = coil->nodes[coil->node_count - 1];
-    coil->has_via = (config->via_size > 0.0) ? 1 : 0;
+    coil->via_center = coil->via_node;
+    coil->has_via = 0;
+
+    if (config->via_size > 0.0 && coil->node_count >= 2)
+    {
+        CF_Vec2 trimmed_end = cf_coil_trimmed_end_point(config, &params);
+        CF_Vec2 prev_node = coil->nodes[coil->node_count - 2];
+
+        coil->nodes[coil->node_count - 1] = trimmed_end;
+        coil->via_node = trimmed_end;
+        coil->via_center = cf_coil_compute_via_center(config, trimmed_end, prev_node);
+        coil->has_via = 1;
+    }
 
     return 1;
 }

@@ -1,52 +1,65 @@
-'''
-@ filename: dialog_ui.py
-@ author:   Ozgur Tuna Ozturk
-@ date:     14/03/2024
-@ license:  MIT License
-@ description: This module implements the CoilForgeDialog class,
-    which defines the user interface for the CoilForge plugin using wxPython.
-    This dialog implementation is designed to be straightforward and user-friendly, 
-    with clear sections for different types of parameters and appropriate default values.
-'''
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+File:       //plugin/plugins/dialog_ui/dialog_ui.py
+Date:       2026-03-13
+Author:     Ozgur Tuna Ozturk
+Contact:    [@Tozturk18](tunaozturk2001@hotmail.com)
+Last Mod:   2026-03-15
+Version:    0.1.0
+License:    MIT License
+Description:
+    This module implements the CoilForgeDialog class, which defines the user interface
+    for the CoilForge plugin using wxPython.
+"""
 
-# --- IMPORTS --- #
-from typing import Any, Optional
+# === IMPORTS === #
+import wx           # wxPython for GUI components
+from typing import (
+    Any,            # For type annotations of generic values
+    Optional        # For type annotations of optional values
+)
 
-import wx
+# === INTERNAL MODULES === #
+from ..config.config import (
+    CoilConfig      # Coil Forge configuration parameters
+)
 
-from ..config.config import CoilConfig
+from ..settings.settings import (
+    DEFAULT_CONFIG  # Default configuration values for the dialog fields
+)
 
 # --- CLASSES & FUNCTIONS --- #
 
-# Default values for the dialog fields, used when no initial config is provided
+# Built-in Default values for the dialog fields, used when no initial config is provided
 DEFAULT_VALUES = {
-    "hole_radius": 0.0,
-    "turns": 10.0,
-    "track_width": 0.25,
-    "pitch": 0.45,
-    "arc_resolution": 8,
-    "center_x": 0.0,
-    "center_y": 0.0,
-    "angle": 0.0,
-    "layers": 2,
-    "net_name": "COIL_NET",
-    "via_size": 0.45,
-    "direction": "CW",
+    "hole_radius"    : DEFAULT_CONFIG.hole_radius,
+    "turns"          : DEFAULT_CONFIG.turns,
+    "track_width"    : DEFAULT_CONFIG.track_width,
+    "pitch"          : DEFAULT_CONFIG.pitch,
+    "arc_resolution" : DEFAULT_CONFIG.arc_resolution,
+    "center_x"       : DEFAULT_CONFIG.center_x,
+    "center_y"       : DEFAULT_CONFIG.center_y,
+    "angle"          : DEFAULT_CONFIG.angle,
+    "layers"         : DEFAULT_CONFIG.layers,
+    "net_name"       : DEFAULT_CONFIG.net_name,
+    "via_size"       : DEFAULT_CONFIG.via_size,
+    "direction"      : DEFAULT_CONFIG.direction,
 }
 
 # The TEXT_FIELD_SPECS tuple defines the structure of the dialog fields, including their section, key, and label.
 TEXT_FIELD_SPECS = (
-    ("Geometry", "hole_radius", "Hole Radius (mm)"),
-    ("Geometry", "turns", "Number of Coil Turns"),
-    ("Geometry", "track_width", "Track Width (mm)"),
-    ("Geometry", "pitch", "Pitch (mm)"),
-    ("Routing", "arc_resolution", "Arc Resolution"),
-    ("Placement", "center_x", "Center X Position (mm)"),
-    ("Placement", "center_y", "Center Y Position (mm)"),
-    ("Placement", "angle", "Angle (deg)"),
-    ("Routing", "layers", "Layers"),
-    ("Routing", "via_size", "Via Size (mm)"),
-    ("Connectivity", "net_name", "Net Name"),
+    ("Geometry",     "hole_radius",    "Hole Radius [mm]"),
+    ("Geometry",     "turns",          "Number of Coil Turns"),
+    ("Geometry",     "track_width",    "Track Width [mm]"),
+    ("Geometry",     "pitch",          "Pitch [mm]"),
+    ("Routing",      "arc_resolution", "Arc Resolution"),
+    ("Placement",    "center_x",       "Center X Position [mm]"),
+    ("Placement",    "center_y",       "Center Y Position [mm]"),
+    ("Placement",    "angle",          "Angle [deg]"),
+    ("Routing",      "layers",         "Layers"),
+    ("Routing",      "via_size",       "Via Size [mm]"),
+    ("Connectivity", "net_name",       "Net Name"),
 )
 
 
@@ -88,11 +101,11 @@ class CoilForgeDialog(wx.Dialog):
         sections_grid.AddGrowableCol(0, 1)
         sections_grid.AddGrowableCol(1, 1)
         sections_grid.AddGrowableRow(0, 1)
-        self._warning_wrap_width = 250
+        self._warning_wrap_width = 275
         self._warning_min_height = 42
 
         # ---------- Helper ----------
-        def add_text_field(grid, field_key, label_text, default_value):
+        def _add_text_field(grid, field_key, label_text, default_value):
             label = wx.StaticText(panel, label=label_text)
             field = wx.TextCtrl(panel, value=str(default_value))
 
@@ -101,7 +114,7 @@ class CoilForgeDialog(wx.Dialog):
             grid.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 4)
             grid.Add(field, 1, wx.EXPAND | wx.ALL, 4)
 
-        def make_section(title):
+        def _make_section(title):
             box = wx.StaticBox(panel, label=title)
             box_sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
 
@@ -111,7 +124,7 @@ class CoilForgeDialog(wx.Dialog):
             box_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
             return box_sizer, grid
 
-        def wrap_section(section_sizer):
+        def _wrap_section(section_sizer):
             wrapper = wx.BoxSizer(wx.VERTICAL)
             wrapper.Add(section_sizer, 1, wx.EXPAND | wx.ALL, 6)
             return wrapper
@@ -119,10 +132,10 @@ class CoilForgeDialog(wx.Dialog):
         defaults = self._build_defaults(initial_config)
 
         # ---------- Geometry Section ----------
-        geometry_sizer, geometry_grid = make_section("Geometry")
-        add_text_field(geometry_grid, "hole_radius", "Hole Radius (mm)", defaults["hole_radius"])
-        add_text_field(geometry_grid, "turns", "Number of Coil Turns", defaults["turns"])
-        add_text_field(geometry_grid, "track_width", "Track Width (mm)", defaults["track_width"])
+        geometry_sizer, geometry_grid = _make_section("Geometry")
+        _add_text_field(geometry_grid, "hole_radius", "Hole Radius (mm)", defaults["hole_radius"])
+        _add_text_field(geometry_grid, "turns", "Number of Coil Turns", defaults["turns"])
+        _add_text_field(geometry_grid, "track_width", "Track Width (mm)", defaults["track_width"])
 
         spacing_pitch_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -157,16 +170,16 @@ class CoilForgeDialog(wx.Dialog):
         self.fields["pitch"].Bind(wx.EVT_TEXT, self._on_pitch_changed)
 
         # ---------- Placement Section ----------
-        placement_sizer, placement_grid = make_section("Placement")
-        add_text_field(placement_grid, "center_x", "Center X Position (mm)", defaults["center_x"])
-        add_text_field(placement_grid, "center_y", "Center Y Position (mm)", defaults["center_y"])
-        add_text_field(placement_grid, "angle", "Angle (deg)", defaults["angle"])
+        placement_sizer, placement_grid = _make_section("Placement")
+        _add_text_field(placement_grid, "center_x", "Center X Position (mm)", defaults["center_x"])
+        _add_text_field(placement_grid, "center_y", "Center Y Position (mm)", defaults["center_y"])
+        _add_text_field(placement_grid, "angle", "Angle (deg)", defaults["angle"])
 
         # ---------- Routing Section ----------
-        routing_sizer, routing_grid = make_section("Routing")
-        add_text_field(routing_grid, "layers", "Layers", defaults["layers"])
-        add_text_field(routing_grid, "arc_resolution", "Arc Resolution", defaults["arc_resolution"])
-        add_text_field(routing_grid, "via_size", "Via Size (mm)", defaults["via_size"])
+        routing_sizer, routing_grid = _make_section("Routing")
+        _add_text_field(routing_grid, "layers", "Layers", defaults["layers"])
+        _add_text_field(routing_grid, "arc_resolution", "Arc Resolution", defaults["arc_resolution"])
+        _add_text_field(routing_grid, "via_size", "Via Size (mm)", defaults["via_size"])
 
         direction_label = wx.StaticText(panel, label="Direction")
         self.direction = wx.RadioBox(
@@ -182,13 +195,13 @@ class CoilForgeDialog(wx.Dialog):
         routing_grid.Add(self.direction, 1, wx.EXPAND | wx.ALL, 4)
 
         # ---------- Connectivity Section ----------
-        connectivity_sizer, connectivity_grid = make_section("Connectivity")
-        add_text_field(connectivity_grid, "net_name", "Net Name", defaults["net_name"])
+        connectivity_sizer, connectivity_grid = _make_section("Connectivity")
+        _add_text_field(connectivity_grid, "net_name", "Net Name", defaults["net_name"])
 
-        geometry_wrap = wrap_section(geometry_sizer)
-        placement_wrap = wrap_section(placement_sizer)
-        routing_wrap = wrap_section(routing_sizer)
-        connectivity_wrap = wrap_section(connectivity_sizer)
+        geometry_wrap = _wrap_section(geometry_sizer)
+        placement_wrap = _wrap_section(placement_sizer)
+        routing_wrap = _wrap_section(routing_sizer)
+        connectivity_wrap = _wrap_section(connectivity_sizer)
 
         self._left_column_sections = (geometry_wrap, routing_wrap)
         self._right_column_sections = (placement_wrap, connectivity_wrap)
@@ -345,7 +358,7 @@ class CoilForgeDialog(wx.Dialog):
         self.Layout()
         event.Skip()
 
-    def get_input_values(self) -> dict[str, str]:
+    def get_values(self) -> dict[str, str]:
         values = {
             field_name: ctrl.GetValue()
             for field_name, ctrl in self.fields.items()
@@ -353,9 +366,3 @@ class CoilForgeDialog(wx.Dialog):
         }
         values["direction"] = self.direction.GetStringSelection()
         return values
-
-    def get_raw_values(self) -> dict[str, str]:
-        """
-        Compatibility alias for earlier code paths.
-        """
-        return self.get_input_values()

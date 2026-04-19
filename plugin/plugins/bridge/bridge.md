@@ -12,7 +12,7 @@ The bridge now passes `pitch` through the public ABI rather than `spacing`.
 - `CoilForgeBridgeError`: bridge-level runtime exception.
 - `CoilForgeConfig`: ctypes struct matching the C ABI layout, using `-1` for CW and `1` for CCW.
 - `_get_library_name()`: chooses library filename by OS.
-- `_get_library_path()`: resolves path under `plugin/plugins/bin/<platform>`.
+- `_get_library_path()`: resolves path under `plugin/bin/<platform>`.
 - `load_library()`: loads shared library and configures ctypes signatures.
 - `to_c_config(config)`: converts validated config into ctypes struct.
 - `run_ctypes_bridge(config)`: performs the native call and returns decoded output.

@@ -111,3 +111,30 @@ int coilforge_generate_nodes(
     cf_coil_free(&coil);
     return 1;
 }
+
+int coilforge_get_via_result(
+    const CoilForgeConfig *config,
+    CoilForgeViaResult *out_via_result
+)
+{
+    CF_Coil coil;
+
+    if (config == NULL || out_via_result == NULL)
+    {
+        return 0;
+    }
+
+    if (!cf_coil_generate_single_layer(config, &coil))
+    {
+        return 0;
+    }
+
+    out_via_result->has_via = coil.has_via;
+    out_via_result->via_node.x = coil.via_node.x;
+    out_via_result->via_node.y = coil.via_node.y;
+    out_via_result->via_center.x = coil.via_center.x;
+    out_via_result->via_center.y = coil.via_center.y;
+
+    cf_coil_free(&coil);
+    return 1;
+}
